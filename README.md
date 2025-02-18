@@ -1,5 +1,5 @@
-# QueryConverter
-convert Query C to JAVA ( .ec to .xml)
+# work-converter
+convert C to JAVA ( .ec to .xml)
 
 ### JAVA_TOOL_impl.html
 ![image](https://github.com/user-attachments/assets/fcecadf9-28cb-4c0d-90b6-7730cbe1f6b2)
