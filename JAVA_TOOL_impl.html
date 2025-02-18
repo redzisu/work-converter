@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Convert to Java</title>
+</head>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.8/beautify.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.8/beautify-html.min.js"></script><style>
+/*color global variable */
+:root {
+	--red 		: #A97C82;   --blue 	: #6C727B; --green 	   : #007a5a;
+	--grey 		: #ddddddd1; --darkGrey	: #A6ABBD; --lightGrey : #dfdfdf29;
+	--lightGreen: #007a590c; --darkNavy : #191C24; --lightNavy : #2A2D3A;
+	--Navy      : #A6ABBD;   --white   : #FEFEFE;  --purple    : #31294B;
+	--lightPurple: #8F5FE8;
+}
+
+/*top Navigation css*/
+.topNav{position: fixed; top:0; left:0; right:0; z-index:999; font-size:0; border:1px solid #353C4A; background: var(--darkNavy);}
+.topNav li{display: inline-block; height:50px; text-align:center; }
+.topNav li a{ position:relative; display:block; color: var(--Navy); background: var(--darkNavy); padding:0 30px; line-height:46px;}
+.topNav li a:hover{background: black;  color: var(--white);}
+.topNav .creator{float:right;} .topNav .creator a{color:var(--darkGrey);}
+
+/* layout css*/
+html,body {width:100%; box-sizing: border-box;  background: black; }
+body,div,ul,li{margin:0; padding:0; list-style:none;}
+* {font-family: "Nanum Gothic Coding", monospace; font-style: normal; font-size: 14px; line-height: 1.5;} 
+body {
+	display: grid; width: 100%;
+	grid-template:
+		[header-left] "head head" 50px [header-right]
+		[main-left] "nav  main" [main-right]
+		[footer-left] "foot foot" [footer-right]
+		/ 380px 1fr;
+}
+
+header{grid-area: head; background: var(--darkNavy); }
+nav {grid-area: nav; background-color: var(--darkNavy); padding: 5px 20px}
+main {grid-area: main; padding: 5px 15px;}
+footer {grid-area: foot; padding: 15px; background-color: var(--darkNavy);}
+section {padding-bottom: 20px;}
+
+.col_1st { display: grid; grid-template-columns: 1fr; grid-gap: 10px; place-items: center;} 
+.col_2nd { display: grid; grid-template-columns: 1fr 1fr; grid-gap: 10px; place-items: center;} 
+.col_3rd { display: grid; grid-template-columns: 1fr 1fr 1fr; grid-gap: 10px; place-items: center;} 
+
+.flex_col {display: flex; gap: 10px; flex-direction: column; justify-content: center;}
+.flex_wrap {display: flex; gap: 10px;  flex-wrap: wrap;  justify-content: space-between;}
+
+/* etc css*/
+p {color: grey; margin: 5px}
+h3 {color : var(--white); padding: 2px 10px; margin-top: 15px; border-left: 5px solid var(--Navy); border-bottom: 2px solid var(--lightNavy); text-align: left;}
+hr { border-top: 0px solid #8c8c8c; margin: 30px 0px;}
+
+textarea {box-sizing: border-box;-webkit-box-sizing:border-box;-moz-box-sizing: border-box;
+          width: 100%; padding: 10px; border: 1px solid #2A3038;  border-radius: 5px; 
+		  background-color: #2A3038; color: white;}
+textarea:focus {outline: 1px solid var(--green);}
+.output {background-color: var(--lightGrey); border: 1px solid var(--lightGrey); outline:none;}
+.output:focus {outline: none;}
+
+input {	width: 100%; max-width: 200px; padding: 0 16px 0 12px; line-height: 30px;  height: 28px; border: 1px solid #2A3038;  
+		border-radius: 4px;	background-color: #2A3038; color: white;}
+input:focus {outline: 1px solid var(--green);}
+
+/* button css */
+button, a {text-decoration:none; border: 0px; cursor: pointer; border-radius: 2px;  font-weight:600; }
+
+nav button {display: block; width: 100%; max-width: 250px; margin : 0px; padding: 10px 15px; background-color: var(--lightNavy); color: var(--Navy);}
+nav button:hover{ background-color: black; color: var(--white);}
+
+footer  button{ display: block;  width: 100%; max-width: 300px; margin : 10px; padding: 8px 25px; background-color: #474950; 
+				color: var(--grey); border: none; text-align: left; font-weight:500}
+footer  button:hover{ background-color: var(--lightGrey);}
+
+.flex_col button {max-width: 100%; }
+.flex_wrap button {width: 30%;}
+
+/* toast css */
+#toast {z-index: 10000; overflow: hidden;  visibility: hidden; opacity: 0; position: fixed; bottom: 80px; left: 50%; 
+		transform: translate(-50%, 10px); transition: opacity .5s, visibility .5s, transform .5s;
+		background: var(--darkNavy); color: var(--white); padding: 15px 20px; border-radius: 30px;}
+#toast.reveal { opacity: 1; visibility: visible; transform: translate(-50%, 0)}
+</style>
+<body>
+	<header id="tabs-1">
+		<ul class="topNav">
+		  <li><a class="anchor" href="#tabs-1">1. 단순변환</a></li>
+		  <li><a class="anchor" href="#tabs-2">2. 단어조합</a></li>
+		  <li><a class="anchor" href="#tabs-3">3. 템플릿 복사</a></li>
+		  <li class="creator"><a href="">@redzisu</a></li>
+		</ul>
+	</header>
+	<nav>
+		<h3>문자열</h3>
+		<div class="col_2nd">
+			<button onclick="Rtxt.value = cvrtUpper(Ltxt.value); copy(Rtxt);">대문자로 변환</button>
+			<button onclick="Rtxt.value = cvrtLower(Ltxt.value); copy(Rtxt);">소문자로 변환</button>
+			<button onclick="Rtxt.value = cvrtPascal(Ltxt.value); copy(Rtxt);">파스칼로 변환</button>
+		</div>
+		<h3>C to Java :: 추출/변환</h3>
+		<div class="col_2nd">
+			<button onclick="Rtxt.value = getMemberOnly(Ltxt.value); copy(Rtxt);">멤버만 추출</button>
+			<button onclick="Rtxt.value = getMemberSet(Ltxt.value); copy(Rtxt);">구조체.멤버 추출</button>
+			<button onclick="Rtxt.value = cvrtP_Upper(Ltxt.value); copy(Rtxt);">P_대문자로 변환</button>
+			<button onclick="Rtxt.value = makeRequest(Ltxt.value, 2); copy(Rtxt);">request 출력</button>
+			<button onclick="Rtxt.value = makeDeclare(Ltxt.value, 1); copy(Rtxt);">선언부 출력</button>
+			<button onclick="Rtxt.value = makeFunctionSet(Ltxt.value, 1); copy(Rtxt);">함수세트 출력</button>
+			<button onclick="Rtxt.value = cvrtFunctionSet(Ltxt.value, 1); copy(Rtxt);">함수호출 변환</button>
+			<button onclick="Rtxt.value = cvrtLogwriteMulti(Ltxt.value); copy(Rtxt);">logWrite 변환</button>
+		</div>
+		<h3>정렬</h3>
+		<div class="col_3rd">
+			<button onclick="Rtxt.value = spacePretty(Ltxt.value, 1); copy(Rtxt);">쉼표 기준</button>
+			<button onclick="Rtxt.value = spacePretty(Ltxt.value, 2); copy(Rtxt);">등호 기준</button>
+			<button onclick="Rtxt.value = spacePretty_jusuk(Ltxt.value); copy(Rtxt);">주석</button>
+		</div>
+		<h3>Get문 변환 (A.B or A->B)</h3>
+		<div class="col_2nd">
+			<button onclick="Rtxt.value = cvrtGet(Ltxt.value, 1); copy(Rtxt);">A.get("B")</button>
+			<button onclick="Rtxt.value = cvrtGet(Ltxt.value, 2); copy(Rtxt);">A.getInt("B")</button>
+			<button onclick="Rtxt.value = cvrtGet(Ltxt.value, 3); copy(Rtxt);">A.getBigDecimal("B")</button>
+			<button onclick="Rtxt.value = cvrtGet(Ltxt.value, 4); copy(Rtxt);">A.getString("B")</button>
+		</div>
+		<h3>할당문 변환 (A.B = C.D)</h3>
+		<div class="col_2nd">
+			<button onclick="Rtxt.value = cvrtPutGet(Ltxt.value, 1); copy(Rtxt);">A.put("B",<br> C.get("D"))</button>
+			<button onclick="Rtxt.value = cvrtPutGet(Ltxt.value, 2); copy(Rtxt);">A.put("B", C.getBigDecimal("D"))</button>
+		</div>
+		<h3>사칙연산 변환 (-, +, *, /)</h3>
+		<div class="col_2nd">
+			<button onclick="Rtxt.value = cvrtPutGet(Ltxt.value, 2, 'simple'); copy(Rtxt);">단순연산</button>
+			<button onclick="Rtxt.value = cvrtPutGet(Ltxt.value, 2, 'calc'); copy(Rtxt);">Calculator</button>
+		</div>
+		<h3>비교연산 변환 (==, !=, <, >)</h3>
+		<div class="col_3rd">
+			<button onclick="Rtxt.value = cvrtCmp(Ltxt.value, 0); copy(Rtxt);">string</button>
+			<button onclick="Rtxt.value = cvrtCmp(Ltxt.value, 1); copy(Rtxt);">BigDecimal</button>
+			<button onclick="Rtxt.value = cvrtCmp(Ltxt.value, 2); copy(Rtxt);">Int</button>
+		</div>
+		<h3>DblTct 변환 (* ROUND_HALF_UP 체크)</h3>
+		<div class="col_2nd">
+			<button onclick="Rtxt.value = cvrtDblMulti(Ltxt.value, 1); copy(Rtxt);">DblTct</button>
+			<button onclick="Rtxt.value = cvrtDblMulti(Ltxt.value, 2); copy(Rtxt);">DblUTct</button>
+		</div>
+		<hr id="tabs-2">
+		<h3>단어 조합</h3>
+		<div class="col_1st">
+			<input type="text" id="Lipt" placeholder="A" value=""></input>
+			<button onclick="R2txt.value = putGet(L2txt.value, C2txt.value); copy(R2txt);">A.put("B", C.get("D"));</button>
+			<button onclick="R2txt.value = makeGet(L2txt.value, 1); copy(R2txt);">A.get("B"));</button>
+			<button onclick="R2txt.value = makeGet(L2txt.value, 2); copy(R2txt);">A.get("B")</button>
+		</div>
+	</nav>
+	<main>
+		<section>
+			<p>** 더블 클릭시 전체선택</p>
+			<div class="col_2nd">
+				<textarea rows="46" id="Ltxt" ondblclick="selectAll(this)" placeholder="INPUT"></textarea>
+				<textarea rows="46" id="Rtxt" ondblclick="selectAll(this)" placeholder="OUTPUT" class="output"></textarea>
+			</div>
+		</section>
+		<section>
+			<div class="col_3rd">
+				<textarea placeholder="B" rows="20" id="L2txt"></textarea>
+				<textarea placeholder="C.D 또는 C->D" rows="20" id="C2txt"></textarea>
+				<textarea placeholder="OUTPUT" rows="20" id="R2txt" class="output"></textarea>
+			</div>
+		</section>	
+		<div id="toast"></div>
+	</main>
+	<footer id="tabs-3">
+		<div class="flex_wrap"></div>
+		<div class="flex_col"></div>
+	</footer>	
+<script type="text/javascript">
+	
+	/*==================================
+	  상단 네비게이션 클릭시 이동
+	==================================*/
+	$(function () {
+		$(".anchor").on("click", function(){
+			var headerHeight = $("header").outerHeight();
+			var href = $(this).attr("href");
+			var target = $(href == "#" || href == "" ? "body" : href);
+			var position = target.offset().top - headerHeight;
+			$("html, body").animate({ scrollTop: position }, 600, "swing");
+		});
+	});
+
+	/*==================================
+	  textarea 복사
+	==================================*/
+	function copy(textArea) {
+        textArea.select();
+        document.execCommand('copy');
+	};
+	
+	/*==================================
+	  textarea 전체선택
+	==================================*/
+	function selectAll(textArea) {
+        textArea.select();
+	};
+	
+	/*==================================
+	  가상 내용 복사
+	==================================*/
+	function copyClipboard(txt) {
+        var textarea = document.createElement("textarea");
+        textarea.value = txt;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+		toast("복사");
+    }
+	
+	/*==================================
+	  멤버 추출
+	  
+	  # INPUT
+		:(%d)구조체명.GijunIlja     
+		:('%s')구조체명.Broker      
+		:('%.1s')&구조체명.MalsoGb,
+		GETDLSOSOK(:('%s')구조체명.Dealer),	  
+	  
+	  # OUTPUT
+		GijunIlja
+		Broker
+		MalsoGb
+		Dealer
+	==================================*/
+	function getMemberOnly(txt) {	
+		txt = txt.replace(/\([^)]+\)/g, "");							//() 중괄호로 묶인 문자열 제거
+		txt = txt.replace(/\[([\wㄱ-ㅎㅏ-ㅣ가-힣]+)\]/g, "");				//[] 대괄호로 묶인 문자열 제거
+		txt = txt.replace(/(int|char|double)\s+/g, "");					//자료형 제거
+		txt = txt.replace(/\/\*[\s\S]*?\*\//gm, "");					//주석 제거
+		txt = txt.replace(/\"|\;|\,|\(|\)|\:|\&|\{|\}|\#/g, "");		//특수문자 제거
+		txt = txt.replace(/^[^.]+\./gm, "");							//마침표 앞 문자열 제거
+		txt = txt.replaceAll(" ", "");									//공백제거	
+		txt = txt.replaceAll(/\t/g, "");								//탭 제거
+		
+		return txt;
+	};
+	
+	/*==================================
+	  구조체.멤버 추출
+	  
+	  # INPUT
+		:(%d)구조체명.GijunIlja     
+		:('%s')구조체명.Broker      
+		:('%.1s')&구조체명.MalsoGb,
+		GETDLSOSOK(:('%s')구조체명.Dealer),	  
+	  
+	  # OUTPUT
+		구조체명.GijunIlja
+		구조체명.Broker
+		구조체명.MalsoGb
+		구조체명.Dealer
+	==================================*/
+	function getMemberSet(txt) {
+		const regex = /:\(([^)]+)\)([a-zA-Z0-9_.]+)/g;
+
+		const matches = [...txt.matchAll(regex)].map(match => match[2]);
+
+	
+		 //txt = txt.replace(/\(.*?\)/g, '');							//() 중괄호로 묶인 문자열 제거
+		 //txt = txt.replace(/[^._a-zA-Z0-9\n\[\]\-\>]+/g, '');		//마침표, ->, 숫자, 영어, 대괄호[], 줄바꿈 제외하고 제거
+		 //txt = txt.replace(/GETDLSOSOK/g, '');						//GETDLSOSOK 문자열 제거
+		
+		return matches.join("\n");
+	};
+	/*==================================
+	  대문자로 변환
+	==================================*/
+	function cvrtUpper(txt) {
+		txt = txt.toUpperCase();
+		
+		return txt;
+	};
+	
+	/*==================================
+	  소문자로 변환
+	==================================*/
+	function cvrtLower(txt) {
+		txt = txt.toLowerCase();
+		
+		return txt;
+	};
+	
+	/*==================================
+	  파스칼로 변환(맨앞글자만 대문자로)
+	==================================*/
+	function cvrtPascal(txt) {
+		txt = txt.replace(/\b[a-z]/g, char => char.toUpperCase());
+		
+		return txt;
+	};
+	
+	/*==================================
+	  P_대문자 형태로 변환
+	  
+	  # INPUT
+		:(%d)구조체명.GijunIlja     
+		:('%s')구조체명.Broker      
+		:('%.1s')&구조체명.MalsoGb,
+		GETDLSOSOK(:('%s')구조체명.Dealer),	  
+	  
+	  # OUTPUT
+		P_GIJUNILJA
+		P_BROKER
+		P_MALSOGB
+		P_DEALER
+	==================================*/
+	function cvrtP_Upper(txt) {
+		txt = getMemberOnly(txt);					//멤버만 추출
+		txt = cvrtUpper(txt);						//대문자로 변환
+		txt = txt.replace(/\b(\w+)/g, "P_$1");		//문자열 맨앞에 P_ 추가
+		
+		return txt;
+	};
+	
+	
+	/*==================================
+	  특정 문자 기준으로 띄어쓰기 추가해서 예쁘게 줄맞추기
+	  
+	  * 파라미터 (gubun)
+	   - 1 : 쉼표(,)
+	   - 2 : 등호(=)
+	==================================*/
+	function spacePretty(txt, gubun) {
+		let giho, regex, result;
+		
+		if (gubun == 1) {
+			giho = ","; regex = /,/;
+		} else if (gubun == 2) {	
+			giho = "="; regex = /=/;
+		} 
+		
+		//각 줄에서 특정 문자 앞 문자열의 최대 길이 계산
+		let arr = txt.split("\n");									
+		let maxLength = arr.reduce((max, line) => {						//reduce()에서 첫번째 매개변수는 현재까지의 축적된 결과 또는 최종 결과를 나타내는 값 (max)
+			line = line.trim();											//공백 제거
+			let gihoIndex = line.indexOf(giho);							//각 줄에서 특정 문자의 인덱스 찾기
+			let length = gihoIndex !== -1 ? gihoIndex : line.length;	//특정문자가 있을 경우 해당 인덱스를, 그렇지 않은 경우 해당 줄의 길이 반환
+			
+			return Math.max(max, length);
+		}, 0);
+		
+		
+		//예쁘게 줄맞추기
+		result = "";
+		arr.forEach(line => {
+			line = line.trim();																			//공백 제거
+			let gihoIndex = line.indexOf(giho);															//각 줄에서 특정 문자의 인덱스 찾기
+			let extraSpaces = ' '.repeat(maxLength - (gihoIndex !== -1 ? gihoIndex : line.length));		//추가할 빈 공간 계산
+			let formattedLine = line.replace(regex, extraSpaces + giho);								//특정 문자 앞에 빈 공간 추가하여 문자열 가공
+			
+			result += formattedLine + '\n';
+		});
+		
+		return result;
+	};
+	
+	/*==================================
+	  주석 줄맞추기
+	==================================*/
+	function spacePretty_jusuk(text) {
+		let result = "";
+		
+		let regex = /\s*\/\*[\s\S]*?\*\/|\s*\/\/.*/;
+		
+		// 각 줄에서 주석을 제외한 문자열의 최대 길이 계산
+		let arr = text.split("\n");
+		let maxLength = arr.reduce((max, line) => {
+		    line = line.replace(regex, "");   
+			line = line.trim();
+
+			return Math.max(max, line.length);
+		}, 0);
+		
+		//예쁘게 줄맞추기
+		arr.forEach(line => {
+			line = line.trim();
+			
+			//각 줄에서 주석의 인덱스 찾기
+			let commentStart = line.indexOf('/*');
+			let doubleSlashIndex = line.indexOf('//');
+			
+			let jusuk = "";
+			
+			if (commentStart !== -1 || doubleSlashIndex !== -1) {		//문장에 주석이 있을 경우
+				
+				//추가할 빈 공간 계산
+				let temp = 0;
+				if (commentStart !== -1) {
+					temp = maxLength - commentStart;
+				} else if (doubleSlashIndex !== -1){
+					temp = maxLength - doubleSlashIndex;
+				} else {
+					temp = maxLength - line.length;
+				}
+
+				let extraSpaces = " ".repeat(Math.abs(temp)) + "\t";
+				
+				//주석 앞에 빈 공간 추가하여 문자열 가공	
+				line = line.replace(regex, function(match) {
+					jusuk = match.trim();
+					return "";
+				});
+				
+				result += line + extraSpaces +  jusuk + '\n';
+			} else {
+				result += line + '\n';
+			}
+		});
+		
+		return result;
+	};
+	
+	/*==================================
+	  포맷 변환 
+	  gubun 1 : A.B => A.get("B")
+	  gubun 2 : A.B => A.getInt("B")
+	==================================*/
+	function cvrtGet(txt, gubun) {
+		// 최종 리턴값
+		var result = "";
+	
+		txt = txt.replaceAll("&", "");
+		
+		// 문자열을 줄 바꿈 기준으로 분할하여 각 줄에 대해 처리
+		txt.split("\n").forEach(function(line) {
+			var str = "";
+			var str2 = "";
+			if(gubun == 1) {
+				str = '$1.get("$3")';
+				str2 = '$1.get($2).get("$3")';
+			} else if(gubun == 2) {
+				str = '$1.getInt("$3")';
+				str2 = '$1.get($2).getInt("$3")';
+			} else if(gubun == 3) {
+				str = '$1.getBigDecimal("$3")';
+				str2 = '$1.get($2).getBigDecimal("$3")';
+			} else if(gubun == 4) {
+				str = '$1.getString("$3")';
+				str2 = '$1.get($2).getString("$3")';
+			}
+			
+			// 따옴표로 묶인 문자열을 보호하고 임시로 저장
+			var protectedStrings = [];
+			line = line.replace(/("[^"]+")/g, function(match) {
+				protectedStrings.push(match);
+				return "__PROTECTED_STRING__";
+			});
+			
+			// 보호된 따옴표로 묶인 문자열을 제외하고 변환
+			line = line.replace(/(\w+)(\.|\-\>)(\w+)/, str);
+			line = line.replace(/(\w+)\[([^\]]+)\]\.(\w+)/g, str2);
+			
+			// 보호된 따옴표로 묶인 문자열을 다시 복원
+			line = line.replace(/__PROTECTED_STRING__/g, function() {
+				return protectedStrings.shift();
+			});
+
+			result += line + "\n";
+		});
+		
+		//마지막 개행 제거
+		return result.trim();
+	};
+	
+	/*==================================
+	  포맷 변환 
+	  gubun 1 : A.B = C.D => A.put("B", C.get("D"))
+	  gubun 2 : A.B = C.D => A.put("B", C.getBigDecimal("D"))
+	==================================*/
+	function cvrtPutGet(txt, gubun, calcMode) {
+		// 최종 리턴값
+		var result = "";
+		var wordA, wordB, wordB2, wordC, wordD, wordE ;
+		// 문자열을 줄 바꿈 기준으로 분할하여 각 줄에 대해 처리
+		let gijun = "\n";
+		if (calcMode != null) {
+			gijun = ";";
+			txt = txt.trim();
+			txt = txt.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, "");	//주석제거
+		}
+		txt.split(gijun).forEach(function(line) {
+			var newline = "";
+			line = line.replace(/\;/g, "");
+			
+			// 주석을 임시로 저장
+			var jusuk = "";
+			line = line.replace(/\/\*[\s\S]*?\*\/|\/\/.*/, function(match) {
+				jusuk = match;
+				return "";
+			});
+			
+			line = line.trim();
+			
+			if (line.trim() == "") {
+				return;
+			}
+			// 정규식을 사용하여 A.B와 C.D를 분할
+			var match1 = line.match(/([^=]+)\s*=\s*([^=]+)/);
+			var match2 = line.match(/strcpy\(\s*([^,]+)\s*,\s*([^,]+)\s*\)/);
+			
+			// 분할된 결과를 이용하여 문자열로 추가
+			if (match1 || match2) {
+				//등호 기준 왼쪽 사이드
+				var wordAB = match1 ? match1[1] : match2[1];
+				var matchAB = wordAB.match(/(\w+)(\.|\-\>)(\w+)/);
+				var matchAB2 = wordAB.match(/(\w+)\[(\w)\]\.(\w+)/);
+				
+				if(matchAB) {
+					wordA = matchAB[1];
+					wordB = matchAB[3];
+				}
+				
+				if(matchAB2) {
+					wordA = matchAB2[1];
+					wordB = matchAB2[2];
+					wordB2 = matchAB2[3];
+				}
+				
+				//등호 기준 오른쪽 사이드
+				var wordCD = match1 ? match1[2] : match2[2];
+				if (calcMode == "simple") {
+					var matchCD = isNaN(wordCD) ?cvrtCalc_simple(wordCD) : null;
+				} else if (calcMode == "calc") {
+					var matchCD = isNaN(wordCD) ?cvrtCalc(wordCD) : null;
+				} else {
+					var matchCD = isNaN(wordCD) ? gubun == "1" ? cvrtGet(wordCD, 1) : cvrtGet(wordCD, 3) : null;
+				}
+				
+				if (matchAB || matchAB2) {
+					if(matchAB && matchCD) {
+						if(gubun == 1) {
+							newline = `${wordA}.put("${wordB}", ${matchCD});` ;
+						} else {
+							newline = `${wordA}.put("${wordB}", ${matchCD});`;
+						}
+					} else if(matchAB2 && matchCD) {
+						if(gubun == 1) {
+							newline = `${wordA}.get(${wordB}).put("${wordB2}",${matchCD});`;
+						} else {
+							newline = `${wordA}.get(${wordB}).put("${wordB2}", ${matchCD});`;
+						}
+					} else if(matchAB){
+						newline = `${wordA}.put("${wordB}", ${matchCD});`;
+					} else if(matchAB2){
+						newline = `${wordA}.get(${wordB}).put("${wordB2}", ${matchCD});`;
+					}
+				}  else {
+					if(matchCD) {
+						if(gubun == 1) {
+							newline = `${wordAB} = ${matchCD};`;
+						} else {
+							newline = `${wordAB} = ${matchCD};`;
+						}
+					}
+				}
+				
+				newline  = newline + jusuk + "\n";
+			} else {
+				// 등호없는경우
+				if (calcMode !="simple") {
+					newline = cvrtCalc_simple(line)+ "\n";
+				} else if (calcMode !="calc") {
+					newline = cvrtCalc(line)+ "\n";
+				}
+			}
+			
+			result += newline;
+		});
+		
+		 if (calcMode != "calc") {
+			result = spacePretty(result, 1).trim();
+			result = spacePretty_jusuk(result);
+		 }
+		 
+		//마지막 개행 제거
+		return result;
+	};
+	
+	/*==================================
+	  사칙연산 변환
+	==================================*/
+	function cvrtCalc_simple(line) {
+    // 문자열을 줄 바꿈 기준으로 분할하여 각 줄에 대해 처리
+   
+	var result = "";
+	
+	line = line.replaceAll(/\-\>/g, ".");
+	
+    //txt.trim().split(";").forEach(function(line) {
+		let transformedExpression = "";
+		
+		if (line.trim() == "") {
+			return;
+		}
+        // 등호 기준으로 분리
+		var match = line.trim().match(/([^=]+)\s*=\s*([^=]+)/);
+		
+		if (match) {
+			leftSide = match[1];
+			rightSide = match[2];
+		} else {
+			leftSide = "";
+			rightSide = line;
+		}
+			
+        var parts = rightSide.split(/\s*(\+|\-|\/|\*)\s*/);
+		var gubunDivide = false;
+		
+        for (let i = 0; i < parts.length; i++) {
+			 parts[i] = isNaN(parts[i]) ? parts[i].replace(/(\w+)(\.)(\w+)/g, '$1.getBigDecimal("$3")') : 'BigDecimal.valueOf(' + parts[i] + ')';
+
+			 if(gubunDivide) {
+				parts[i] = parts[i] + ", MathContext.DECIMAL128";
+				gubunDivide = false;
+			 }
+			 
+             switch (parts[i + 1]) {
+				case '+':
+					transformedExpression += i < 1 ? `${parts[i]}.add(` : `${parts[i]}).add(`;
+					break;
+				case '-':
+					transformedExpression += i < 1 ? `${parts[i]}.subtract(` : `${parts[i]}).subtract(`;
+					break;
+				case '*':
+					transformedExpression += i < 1 ? `${parts[i]}.multiply(` : `${parts[i]}).multiply(`;
+					break;
+				case '/':
+					transformedExpression += i < 1 ? `${parts[i]}.divide(` : `${parts[i]}).divide(`;
+					gubunDivide = true;
+					break;
+				default:
+					transformedExpression += `${parts[i]})`;
+					break;
+			}
+			
+			i++;
+        }
+		
+		//등호식이면
+		if(leftSide != "") {
+			var matchAB = leftSide.match(/(\w+)(\.|\-\>)(\w+)/);
+			if (matchAB) {
+				var wordA = matchAB[1];
+				var wordB = matchAB[3];
+				result += `${wordA}.put("${wordB}", ` + transformedExpression + `);\n`;
+			} else {
+				result += `${leftSide} = ` + transformedExpression + `;\n`;
+			}
+		} else {
+			result += transformedExpression;
+		}
+		
+  //  });
+	
+		return result.trim();
+	};
+	
+	/*==================================
+	  사칙연산 변환
+	==================================*/
+	function cvrtCalc(txt) {
+		// 최종 리턴값
+		var result = "";
+		var leftSide = "";
+		var rightSide = "";
+		let count = 0;
+		
+		txt = txt.trim();
+		txt = txt.replaceAll("\n", "");
+		txt = txt.replaceAll("(", "");
+		txt = txt.replaceAll(")", "");
+		txt = txt.replaceAll("->", ".");
+		txt = txt.replaceAll(";", "");
+		
+		// 문자열을 줄 바꿈 기준으로 분할하여 각 줄에 대해 처리
+		//txt.split("\n").forEach(function(line) {
+			// 등호 기준으로 분리
+			line = txt;
+			var match = line.match(/([^=]+)\s*=\s*([^=]+)/);
+			if (match) {
+				leftSide = match[1];
+				rightSide = match[2];
+			} else {
+				leftSide = "";
+				rightSide = line;
+			}
+			
+			//계산식
+			var arrFormula = rightSide.split(/[-+*/]/);
+			arrFormula = arrFormula.filter(item => item.trim() !== '');
+
+			for (let i = 0; i < arrFormula.length; i++) {
+				arrFormula[i] = arrFormula[i].trim();
+				arrFormula[i] = isNaN(arrFormula[i]) ? arrFormula[i].replace(/(\w+)(\.)(\w+)/g, '$1.getBigDecimal("$3")').trim() : 'BigDecimal.valueOf(' + arrFormula[i] + ')';
+			}
+			
+			var simpleFormula = rightSide.replace(/[-+*/]|[^-+*/]+/g, function(t) {
+				// *, -, /, +가 아닌 문자열은 $숫자 형식으로 변환
+				if (t !== '-' && t !== '+' && t !== '/' && t !== '*') {
+					return "$" + count++;
+				} else {
+					return t;
+				}
+			});
+			
+			var formula = 'Calculator.execCalc("' + simpleFormula + '",\n' + arrFormula.map(item => item.trim()).join(",\n") + ")";
+			
+			//등호식이면
+			if(leftSide != "") {
+				var matchAB = leftSide.match(/(\w+)(\.|\-\>)(\w+)/);
+				if (matchAB) {
+					var wordA = matchAB[1];
+					var wordB = matchAB[3];
+					result += `${wordA}.put("${wordB}", ` + formula + `);\n`;
+				} else {
+					result += `${leftSide} = ` + formula + `;\n`;
+				}
+			} else {
+				result += formula;
+			}
+		//});
+		
+		toast("마이너스 + 숫자 조심!!!!!", 2000);
+		
+		//마지막 개행 제거
+		return result.trim();
+	};
+	
+	/*==================================
+	  비교연산 변환
+	  if((strcmp(p_Obj.GeoraeGb  , _test)          == 0) ||
+		  (strcmp(p_Obj.GeoraeGb  , _test    )         == 0) ||
+		  (strcmp(p_Obj.GeoraeGb  , _test)  == 0)) { 
+			  }
+	==================================*/
+	function cvrtCmp(txt, gubun) {
+		// 최종 리턴값
+		var leftSide = "";
+		var rightSide = "";
+		var isIf = false;
+		
+		txt = txt.replaceAll("'", '"');
+		txt = txt.replace(/strcmp\s*\(\s*([^,]+),([^)]+)\)\s*(\=\=|\!\=)\s*0/g, '$1 $3 $2');
+		
+		// 기호 기준으로 분리 (!=, ==, <, >)
+		var match = txt.match(/([^\s]+)\s*(\!\=|\=\=|\<|\>|\<\=|\>\=)\s*([^\s]+)/g);
+		var temp;
+		var result = txt.replace(/([^\s]+)\s*(\!\=|\=\=|\<|\>|\<\=|\>\=)\s*([^\s\)]+)/g, function(match, leftSide, sign, rightSide) {
+			function changeNum(str, igubun) {
+				if (igubun == 1) {
+					str = str.replace(/getString\(/g, 'getBigDecimal(');
+					str = str.replace(/(\b-?\d+\b)/g, "BigDecimal.valueOf($1)");
+				} else {
+					str = str.replace(/getString\(/g, 'getInt(');
+				}
+				
+				return str;
+			};
+		
+			leftSide = leftSide.replace(/(\w+)(\.|\-\>)(\w+)/g, '$1.getString("$3")');
+			rightSide = rightSide.replace(/(\w+)(\.|\-\>)(\w+)/g, '$1.getString("$3")');
+
+			//BigDecimal 비교인지 check
+			if(gubun == 1 || gubun == 2) {
+				leftSide = changeNum(leftSide, gubun);
+				rightSide = changeNum(rightSide, gubun);
+			}
+			
+			if (gubun == 0) {
+				temp = leftSide + ".equals(" + rightSide + ") ";
+			} else if  ( gubun == 1){
+				temp = leftSide + ".compareTo(" + rightSide + ") " + sign + " 0";
+			} else {
+				temp = leftSide + " " +  sign + " " + rightSide;
+			} 
+			
+			return temp;
+		});
+
+		result = result.replaceAll(/if\s*\(/g, "if (");
+		
+		return result;
+	};
+	
+	/*==================================
+	  DblTct 변환
+	==================================*/
+	function cvrtDbl(txt, gubun) {
+		// 기호 기준으로 분리 (!=, ==, <, >)
+		var matchTxt = "";
+		var result ="";
+		if (txt.includes("DblUTct")) {
+			var mDblUTct = /DblUTct\(([^,]+)\,([^,]+)\,/g.exec(txt);
+			matchTxt = mDblUTct[1].trim();
+			gubun = mDblUTct[2].trim();
+			
+			if (matchTxt.match(/(\w+)(\.|\-\>)(\w+)/g)) {
+				result = matchTxt.replace(/(\w+)(\.|\-\>)(\w+)/g, '$1.put("$3", $1.getBigDecimal("$3").setScale(') + gubun + ", BigDecimal.ROUND_UP));"
+			} else if (matchTxt.match(/(\w+)\[(\w)\]\.(\w+)/g)) {
+				result = matchTxt.replace(/(\w+)\[(\w)\]\.(\w+)/g, '$1.get($2).put("$3", $1.get($2).getBigDecimal("$3").setScale(') + gubun + ", BigDecimal.ROUND_UP));"
+			} else {
+				result = matchTxt + " = " + matchTxt + ".setScale(" + gubun + ", BigDecimal.ROUND_UP);";
+			}
+		}
+		
+		if (txt.includes("DblTct")) {
+			var mDblTct = /DblTct\(([^,]+)\,([^,]+)\,/g.exec(txt);
+			matchTxt = mDblTct[1].trim();
+			gubun = mDblTct[2].trim();
+			
+			if (matchTxt.match(/(\w+)(\.|\-\>)(\w+)/g)) {
+				result = matchTxt.replace(/(\w+)(\.|\-\>)(\w+)/g, '$1.put("$3", $1.getBigDecimal("$3").setScale(') + gubun + ", BigDecimal.ROUND_DOWN));"
+			} else if (matchTxt.match(/(\w+)\[(\w)\]\.(\w+)/g)) {
+				result = matchTxt.replace(/(\w+)\[(\w)\]\.(\w+)/g, '$1.get($2).put("$3", $1.get($2).getBigDecimal("$3").setScale(') + gubun + ", BigDecimal.ROUND_DOWN));"
+			}else {
+				result = matchTxt + " = " + matchTxt + ".setScale(" + gubun + ", BigDecimal.ROUND_DOWN);";
+			}
+		}
+		
+		return result;
+	};
+	
+	function cvrtDblMulti(txt, gubun) {
+		// 최종 리턴값
+		var result = "";
+		
+		// 문자열을 줄 바꿈 기준으로 분할하여 각 줄에 대해 처리
+		txt.split("\n").forEach(function(line) {
+			let tempS = "";
+			//if (cvrtDbl(line, gubun) == "") {
+			//	tempS = cvrtPutGet(line);
+			//} else {
+				tempS = cvrtDbl(line, gubun);
+			//}
+			if (tempS != "") {
+				result += tempS  + "\n";
+			}
+		});
+
+		//마지막 개행 제거
+		return result;
+	};
+			
+	
+	/*==================================
+	  선언부 변환정렬
+		int    Count, i, TargetIlja;
+		struct p_Obj *p_Ary;
+		char   nSign;
+		double Hwansanyul;
+	==================================*/
+	function makeDeclare(txt, gubun) {
+		// 최종 리턴값
+		var result = "";
+		
+		// 문자열을 줄 바꿈 기준으로 분할하여 각 줄에 대해 처리
+		txt.split("\n").forEach(function(line) {
+			line = line.replace(/\t/g, " ");
+			line = line.replace(/\s+/g, " ");
+			line = line.trim();
+			
+			if (line.includes("int")) {
+				line = line.replace(/(int)(\s)([^\;]+\;)/g, "$1        $3");
+			}
+			
+			if (line.includes("char")) {
+				line = line.replace(/(char)(\s)([^\;]+\;)/g, "String     $3");
+			}
+			
+			if (line.includes("double")) {
+				line = line.replace(/(double)(\s)([^\;]+\;)/g, "BigDecimal $3");
+				line = line.replace(/0.0/g, "BigDecimal.ZERO");
+				line = line.replace(/0/g, "BigDecimal.ZERO");
+			}
+			
+			if (line.includes("struct")) {
+				if (line.includes("Ary")){
+					line = line.replace(/\[\d*\]/g, "");
+					line = line.replace(/(struct)(\s\w+\s)([^\;]+)\;/g, function(match, s1, s2, s3) {
+						s3 = s3.replaceAll("*", "");
+						
+						return "List<DataSet>   " + s3 + " = new ArrayList<DataSet>();";
+					});
+				} else {
+					line = line.replace(/(struct)(\s\w+\s)([^\;]+)\;/g, function(match, s1, s2, s3) {
+						s3 = s3.replaceAll("*", "");
+						
+						return "DataSet   " + s3 + " = new DataSet();";
+					});
+				}
+			}
+			
+			result = result + line + "\n";
+		});
+		
+		//마지막 개행 제거
+		return spacePretty(result, 2).trim();
+	};
+	
+	/*==================================
+	  Request 변환정렬 
+		char p_MalsoGb,
+		char *p_GyeoljeCode,
+		struct stObj p_Obj
+	==================================*/
+	function makeRequest(txt, gubun) {
+		// 최종 리턴값
+		var result = "";
+		
+		// 문자열을 쉼표 기준으로 분할하여 각 줄에 대해 처리
+		txt.split(",").forEach(function(line) {
+			line = line.replace(/\t/g, " ");
+			line = line.replace(/\s+/g, " ");
+			line = line.replaceAll("*", "");
+			line = line.trim();
+			
+			if (line.includes("int")) {
+				line = line.replace(/(int)(\s)(\w+)/g, '$1        $3 = request.getInt("$3");');
+			}
+			
+			if (line.includes("char")) {
+				line = line.replace(/(char)(\s)(\w+)/g, 'String     $3 = request.getString("$3");');
+			}
+			
+			if (line.includes("double")) {
+				line = line.replace(/(double)(\s)(\w+)/g, 'BigDecimal $3 = request.getBigDecimal("$3");');
+			}
+			
+			if (line.includes("struct")) {
+				if(line.includes("Ary")) {
+					line = line.replace(/(struct)(\s\w+\s)(\w+)/g, 'List<DataSet> $3 = request.getList("$3");');
+				} else {
+					line = line.replace(/(struct)(\s\w+\s)(\w+)/g, 'DataSet    $3 = request.getDataSet("$3");');
+				}
+			}
+			
+			result = result + line + "\n";
+		});
+		
+		//마지막 개행 제거
+		return spacePretty(result, 2).trim();
+	};
+	
+		
+	/*==================================
+	  최대길이문자길이 추출
+	==================================*/
+	function spacePretty_old(arr) {
+		if(arr.length > 0) {
+			return arr.reduce((max, item) => Math.max(max, item.length), 0);
+		} else {
+			return "";
+		}
+	};
+	
+	
+	/*==================================
+	  A.put("B", C.get("D"));
+	==================================*/
+	function putGet(strB, strD ) {
+		var strA = document.getElementById('Lipt').value;
+		
+		strB = getMemberOnly(strB);
+		strD = getMemberSet(strD);
+		
+		//문자열을 개행을 기준으로 나누고, 각 항목에서 공백이나 빈 문자열을 제거하여 배열 생성
+		var arrB = strB.split('\n').filter(item => item.trim() !== "");
+		var arrD = strD.split('\n').filter(item => item.trim() !== "");
+		
+		if (arrB.length != arrD.length) {
+			alert("[error] 개수가 다름!");
+			return;
+		}
+		// 배열에서 가장 긴 단어의 길이 찾기
+		var maxLength = Math.max(...arrB.map(word => word.length));
+		
+		// 배열에서 가장 긴 단어에 맞춰 공백 만들어서 다시 배열에 저장하기
+		var resultB = [];
+		arrB.forEach(word => {
+			var padding = ' '.repeat(maxLength - word.length);
+			var formattedWord = `"${word}"${padding}`;
+			resultB.push(formattedWord);
+		});
+		
+		var newArrD = arrD.map(function(line) {
+			line = line.replace(/(\w+)(\.|\-\>)(\w+)/g, '$1.get("$3")');
+			line = line.replace(/(\w+)\[(\w)\]\.(\w+)/g, '$1.get($2).get("$3")');
+			return line;
+		});
+		
+		// 최종 리턴값
+		var result = "";
+		for (let i = 0; i < resultB.length; i++) {
+			result += strA + '.put(' + resultB[i] + ', ' + newArrD[i] + ');\n';
+		}
+		
+		return result.trim();
+	};
+	
+	/*==================================
+	  A.get("B")
+	==================================*/
+	function makeGet(strB, gubun) {
+		var strA = document.getElementById('Lipt').value;
+		
+		//문자열을 개행을 기준으로 나누고, 각 항목에서 공백이나 빈 문자열을 제거하여 배열 생성
+		var arrB = strB.split('\n').filter(item => item.trim() !== "");
+		
+		// 최종 리턴값
+		var result = "";
+		
+		if(gubun == 1) {
+			for (let i = 0; i < arrB.length; i++) {
+				result += strA+ '.get("' + arrB[i] + '"));\n';
+			}
+		} else {
+			for (let i = 0; i < arrB.length; i++) {
+				result += strA+ '.get("' + arrB[i] + '")\n';
+			}
+		}
+		
+		return result.trim();
+	};
+	
+	/*==================================
+	  function set
+	==================================*/
+	function makeFunctionSet(sFuncName, gubun) {
+		var sFuncName = document.getElementById('Ltxt').value;
+		
+		// 최종 리턴값
+		var result = "";
+		
+		if(gubun == 1) {
+			result = `DataSet ${sFuncName}_in = new DataSet();
+            ${sFuncName}_in.put("", );
+            
+            ObjRet = this.${sFuncName}(${sFuncName}_in);
+            
+            if (ObjRet.getInt("Code") < 0) {
+                return ObjRet;
+            }
+			
+            Obj = ObjRet.getDataSet("p_Obj");`;
+		} 
+		return result;
+	};
+	
+	/*==================================
+	  function set 변환
+	==================================*/
+	function cvrtFunctionSet(input, gubun) {		
+		let regex = /^(\w+)\(([^)]*)\)/;
+		let match = input.match(regex);
+		let result = "";
+		
+		if (match) {
+			let sFuncName = match[1]; // 함수 이름
+			let paramsString = match[2]; // 파라미터 문자열
+
+			// 파라미터를 쉼표로 구분하여 배열로 저장
+			let inParams = paramsString.split(/\s*,\s*/);
+			let outParams = inParams.filter(param => param.includes('&'));
+
+			let convertedinParams = inParams.map(param => cvrtGet(param, 1));
+			let convertedoutParams = outParams.map(param => cvrtGet(param, 1));
+			
+			let inText = "";
+			for (let i = 0; i < convertedinParams.length; i++) {
+				let sentence1 = `${sFuncName}_in.put("", ${convertedinParams[i]});`;
+				inText = inText + sentence1 + "\n" + `            `;
+			}
+			
+			let outText = "";
+			for (let i = 0; i < convertedoutParams.length; i++) {
+				let sentence2 = `${convertedoutParams[i]} = ObjRet.getDataSet("");`;
+				outText = outText + sentence2 + "\n"  + `            `;
+			}
+  
+			result = `DataSet ${sFuncName}_in = new DataSet();
+			
+            ${inText}
+            ObjRet = this.${sFuncName}(${sFuncName}_in);
+            
+            if (ObjRet.getInt("Code") < 0) {
+                return ObjRet;
+            }
+			
+            ${outText}`;
+		 
+		}
+		return result;
+	};
+	
+	/*==================================
+	  복사용 데이터
+	  => 배열에 있는 문자열 데이터만큼 복사 버튼 생성됨
+	==================================*/
+	var copyArray2  = [
+	`BigDecimal.valueOf(0)`
+	,
+	`ObjRet.put("Code", 1);`
+	, 
+	`ObjRet.put("Message", "");`
+	,
+	`getString`
+	,
+	`DataSet`
+	,
+	`getDataSet`
+	,
+	`getInt`
+	,
+	`BigDecimal`
+	,
+	`getBigDecimal`
+	,
+	`stBL00000Impl`
+	, 
+	`tmBL00000Impl`
+	,
+	`, MathContext.DECIMAL128`
+	,
+	`List<DataSet>`
+	,
+	`ArrayList<DataSet>`
+	,
+	`stBL00000Mapper`
+	,
+	`stBL00000Mapper`
+	];
+	
+	var copyArray  = [
+	`DataSet ObjobtMASTER = new DataSet();`
+	,
+	`ObjRet.put("Code", );`
+	,
+	`DblTct.setScale(0, BigDecimal.ROUND_DOWN);`
+	,
+	`gesan = Calculator.execCalc("$0 * (($1 / $2) - $3)",
+                    p_Obj.getBigDecimal("OMeibAmt"),
+                    p_Obj.getBigDecimal("Hwanyul"),
+                    p_Obj.getBigDecimal("Danwi"),
+                    p_Obj.getBigDecimal("AvgHwanyul"));`
+	,
+	`        DataSet ObjRet = new DataSet();
+        
+        ObjRet.put("Code", 1);
+        ObjRet.put("Message", "");
+        ObjRet.put("SubCode", 0);
+        ObjRet.put("SubMessage", "");
+        
+        return ObjRet;`
+	,
+	`DataSet p_Obj = request.getDataSet("p_Obj");`
+	,
+	`DataSet s1_in = new DataSet();
+	s1_in.put("", );
+	
+	List<DataSet> 리스트데이터셋 = stBL00000Mapper.SQL함수_S1(s1_in);
+	`
+	,
+	`DataSet d1_in = new DataSet();
+	s1_in.put("", );
+	
+	stBL00000Mapper.SQL함수_D1(d1_in);
+	`
+	,
+	`DataSet i1_in = new DataSet();
+	i1_in.put("", );
+	
+	stBL00000Mapper.SQL함수_I1(i1_in);
+	`
+	,
+	`DataSet u1_in = new DataSet();
+	u1_in.put("", );
+	
+	stBL00000Mapper.SQL함수_U1(u1_in);
+	`
+	,
+	
+	`        if( p_Obj.size() == 0 ) {
+            ObjRet.put("Code", 0);
+            throw processException("fail.common.msg",
+                    new String[] { String.format("",
+                            p_Obj.getString("JongCode"), p_Obj.getInt("GijunIlja")) });
+        } else {
+            ObjRet.put("Code", p_Obj.size());
+            ObjRet.put("p_Obj", p_Obj);
+        }`
+	,
+	`ObjRet = this.stBL00000_GetBaseInfo(stBL00000_GetBaseInfo_in);`
+	,
+	`		if (ObjRet.getInt("Code") < 1) {
+			return ObjRet;
+		}`
+	,
+	`		DataSet stBL00001_GetBaseInfo_in = new DataSet();
+		stBL00001_GetBaseInfo_in.put("p_Obj", Obj);
+		stBL00001_GetBaseInfo_in.put("p_login", login);
+		
+		ObjRet = this.stBL00000_GetBaseInfo(stBL00000_GetBaseInfo_in);
+		
+		Obj00001a = ObjRet.getDataSet("p_Obj00001a");
+		
+		if (ObjRet.getInt("Code") < 1 ) {
+			return ObjRet;
+		}`
+	,
+	`throw processException("fail.common.msg",
+                    new String[] { String.format("%d %d",
+                            p_Obj.getInt("JongCode"), p_Obj.getInt("GijunIlja")) }); `
+	,
+	`throw processException("fail.common.error", new String[] {});`	
+	,
+	`if (Objtemp.size() < 0 || Objtemp == null) {
+                throw processException("fail.common.error", new String[] {String.format("")});
+            } else if(Objtemp.size() == 0) {
+                ObjRet.put("Code" , -1);
+                ObjRet.put("Message", String.format("[%s]",p_Obj61212a.getString("Broker")));
+                return ObjRet;
+            } else {
+                return ObjRet;
+            }`
+	];
+	
+	/*==================================
+	  버튼을 생성하고 내용을 채우는 함수
+	==================================*/
+    function createButtons() {
+        var container = document.querySelector('.flex_col');
+		var container2 = document.querySelector('.flex_wrap');
+		
+		// 배열의 각 요소에 대해 버튼 생성
+        copyArray2.forEach(function(text, index) {
+            var button = document.createElement('button');
+            button.innerText = text;
+            button.addEventListener('click', function() {
+                copyClipboard(text);
+            });
+            container2.appendChild(button);
+        });
+		
+        // 배열의 각 요소에 대해 버튼 생성
+        copyArray.forEach(function(text, index) {
+            var button = document.createElement('button');
+            button.innerText = text;
+            button.addEventListener('click', function() {
+                copyClipboard(text);
+            });
+            container.appendChild(button);
+        });
+    }
+	
+	/*==================================
+	  페이지 로드시 버튼 생성 함수 호출
+	==================================*/
+    window.onload = createButtons;
+	
+	/*==================================
+	  toast 토스트 알림 기능
+	==================================*/
+	let removeToast;
+	function toast(string, time) {
+		if(time == "" || time == null) {
+			time = 400;
+		}
+		const toast = document.getElementById("toast");
+		toast.classList.contains("reveal") ?
+			(clearTimeout(removeToast), 
+			  removeToast = setTimeout(function () {document.getElementById("toast").classList.remove("reveal")}, time)) 
+			: removeToast = setTimeout(function () {document.getElementById("toast").classList.remove("reveal")}, time) 
+			toast.classList.add("reveal"),
+			toast.innerText = string;
+	};
+	
+	/*==================================
+	  logWrite 변환
+	==================================*/
+	function cvrtLogwrite(txt) {
+    // 첫 번째 괄호 안의 문자열과 매개변수들을 분리
+    const matches = txt.match(/(logWrite\(".*?")(,\s*.*)\)/);
+    if (!matches) return txt;
+
+    const [fullMatch, formatPart, paramsPart] = matches;
+    
+    // format 문자열에서 %d, %s, %f 패턴을 추출
+    const formatPatterns = formatPart.match(/%lf|%[dsfc]/g) || [];
+    
+    // 매개변수들을 배열로 변환
+    const params = paramsPart
+        .split(',')
+        .slice(1) // 첫 번째 쉼표 이후부터
+        .map(p => p.trim());
+    
+    // 각 매개변수를 해당하는 get 메서드로 변환
+    const transformedParams = params.map((param, index) => {
+        const formatType = formatPatterns[index];
+        
+        switch (formatType) {
+            case '%d':
+				return cvrtGet(param, 2);	//getInt
+            case '%c':
+				return cvrtGet(param, 4);	//getString
+			case '%s':
+                return cvrtGet(param, 4);	//getString
+            case '%f':
+				return cvrtGet(param, 3);	//getBigDecimal
+			case '%lf':
+                return cvrtGet(param, 3);	//getBigDecimal
+            default:
+                return param;
+        }
+    });
+
+    // 결과 조합
+    return `${formatPart}${transformedParams.length ? ', ' : ''}${transformedParams.join(', ')});`;
+}
+
+	/*==================================
+	  logWrite 변환
+	==================================*/
+	function cvrtLogwriteMulti(txt) {
+			// 최종 리턴값
+			var result = "";
+			// 문자열을 줄 바꿈 기준으로 분할하여 각 줄에 대해 처리
+			txt.split("\n").forEach(function(line) {
+				result += cvrtLogwrite(line) + "\n";
+			});
+
+			//마지막 개행 제거
+			return result;
+	}
+</script>
+</body>
+</html>

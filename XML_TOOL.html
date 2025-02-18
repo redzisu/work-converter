@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Convert to Xml</title>
+</head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.8/beautify.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.8/beautify-html.min.js"></script><style>
+/*color global variable */
+:root {
+	--red 		: #cc4d29;   --blue 	: #0062b8; --green 	   : #007a5a;
+	--grey 		: #ddddddd1; --darkGrey	: #b0b0b0; --lightGrey : #dfdfdf29;
+	--lightGreen: #007a590c; --darkNavy : #191939; --lightNavy : #9494B8;
+	--Navy      : #4C4C79;
+}
+* {font-family: "Nanum Gothic Coding", monospace; font-style: normal; font-size: 14px; line-height: 1.5;} 
+
+/*top Navigation css*/
+.topNav{position: fixed; top:0; left:0; right:0; z-index:999; font-size:0; border:1px solid var(--grey); background: white;}
+.topNav li{display: inline-block; height:50px; text-align:center; border-right:1px solid var(--grey);}
+.topNav li a{ position:relative; display:block; color: black; background: white; padding:0 30px; line-height:46px;}
+.topNav li a:hover{color:var(--blue);}
+.topNav .creator{float:right;} .topNav .creator a{color:var(--darkGrey);}
+
+/* layout css*/
+html,body {width:100%; box-sizing: border-box;}
+body,div,ul,li{margin:0; padding:0; font-size: 13px; list-style:none;}
+
+body {
+	display: grid; width: 100%;
+	grid-template:
+		[header-left] "head head" 50px [header-right]
+		[main-left] "nav  main" [main-right]
+		[footer-left] "foot foot" [footer-right]
+		/ 380px 1fr;
+}
+
+header{grid-area: head;}
+nav {grid-area: nav; background-color: var(--lightGrey); padding: 5px 20px}
+main {grid-area: main; padding: 5px 15px;}
+footer {grid-area: foot; padding: 15px; background-color: var(--lightGrey);}
+section {padding-bottom: 20px;}
+
+.col_1st { display: grid; grid-template-columns: 1fr; grid-gap: 10px; place-items: center;} 
+.col_2nd { display: grid; grid-template-columns: 1fr 1fr; grid-gap: 10px; place-items: center;} 
+.col_3rd { display: grid; grid-template-columns: 1fr 1fr 1fr; grid-gap: 10px; place-items: center;} 
+
+.flex_col {display: flex; gap: 10px; flex-direction: column; justify-content: center;}
+.flex_wrap {display: flex; gap: 10px;  flex-wrap: wrap;  justify-content: space-between;}
+
+/* etc css*/
+p {color: grey; margin: 5px}
+h3 {color : var(--darkNavy); padding: 2px 10px; margin-top: 15px; border-left: 5px solid var(--Navy); text-align: left;}
+hr { border-top: 0px solid #8c8c8c; margin: 30px 0px;}
+
+textarea {box-sizing: border-box;-webkit-box-sizing:border-box;-moz-box-sizing: border-box;
+          width: 100%; padding: 10px; border: solid 1px var(--grey); border-radius: 5px; outline-color: var(--darkNavy);}
+.output {background-color: var(--lightGrey); border: 1px solid var(--lightGrey); outline-color: var(--lightGrey);}
+
+input {	width: 100%; max-width: 200px; padding: 0 16px 0 12px; line-height: 30px;  height: 28px;  border: 1px solid var(--grey); 
+		border-radius: 4px;	background-color: white; color: black;}
+
+/* button css */
+button, a {text-decoration:none; color: white; border: 0px; cursor: pointer; border-radius: 2px;  font-weight:600; }
+
+nav button {display: block; width: 100%; max-width: 250px; margin : 0px; padding: 10px 15px; background-color: var(--Navy);}
+nav button:hover{ background-color: var(--lightNavy);}
+
+footer  button{ display: block;  width: 100%; max-width: 300px; margin : 10px; padding: 8px 25px; background-color: white; 
+				color:black; border: 1px solid var(--darkGrey); text-align: left;}
+footer  button:hover{ background-color: var(--lightGrey);}
+
+.flex_col button {max-width: 100%; }
+.flex_wrap button {width: 30%;}
+
+/* toast css */
+#toast {z-index: 10000; overflow: hidden;  visibility: hidden; opacity: 0; position: fixed; bottom: 80px; left: 50%; 
+		transform: translate(-50%, 10px); transition: opacity .5s, visibility .5s, transform .5s;
+		background: var(--darkGrey); color: white; padding: 15px 20px; border-radius: 30px;}
+#toast.reveal { opacity: 1; visibility: visible; transform: translate(-50%, 0)}
+</style>
+<body>
+	<header id="tabs-1">
+		<ul class="topNav">
+		  <li><a class="anchor" href="#tabs-1">변환</a></li>
+		  <li><a class="anchor" href="#tabs-3">복사</a></li>
+		  <li class="creator"><a href="">@redzisu</a></li>
+		</ul>
+	</header>
+	<nav>
+		<h3>변환</h3>
+		<div class="col_2nd">
+			<button onclick="cvrtGrid(Ltxt.value)">그리드 자동생성</button>
+			<button onclick="cvrtDataCol(Ltxt.value)">데이터컬렉션 변환</button>
+		</div>
+		<h3>추출</h3>
+		<div class="col_2nd">
+			<button onclick="extrHeader(Ltxt.value)">헤더명 추출</button>
+			<button onclick="extrComponent(Ltxt.value)">컴포넌트 id 추출</button>
+		</div>
+		<h3>제작</h3>
+		<div class="col_2nd">
+			<button onclick="makeInpt(Ltxt.value)">INPT 제작</button>
+		</div>
+	</nav>
+	<main>
+		<section>
+			<p>** 더블 클릭시 전체선택</p>
+			<div class="col_3rd">
+				<textarea rows="30" id="Ltxt" ondblclick="selectAll(this)" placeholder="INPUT"></textarea>
+				<textarea rows="30" id="Rtxt1" ondblclick="selectAll(this)" placeholder="OUTPUT1" class="output"></textarea>
+				<textarea rows="30" id="Rtxt2" ondblclick="selectAll(this)" placeholder="OUTPUT2" class="output"></textarea>
+			</div>
+		</section>
+		<div id="toast"></div>
+	</main>
+	<footer id="tabs-3">
+		<div class="flex_wrap"></div>
+		<div class="flex_col"></div>
+	</footer>	
+<script type="text/javascript">
+	
+	/*==================================
+	  상단 네비게이션 클릭시 이동
+	==================================*/
+	$(function () {
+		$(".anchor").on("click", function(){
+			var headerHeight = $("header").outerHeight();
+			var href = $(this).attr("href");
+			var target = $(href == "#" || href == "" ? "body" : href);
+			var position = target.offset().top - headerHeight;
+			$("html, body").animate({ scrollTop: position }, 600, "swing");
+		});
+	});
+
+	/*==================================
+	  textarea 복사
+	==================================*/
+	function copy(textArea) {
+        textArea.select();
+        document.execCommand('copy');
+	};
+	
+	/*==================================
+	  textarea 전체선택
+	==================================*/
+	function selectAll(textArea) {
+        textArea.select();
+	};
+	
+	/*==================================
+	  결과 출력
+	==================================*/
+	function printResult(p1, p2) {
+		var result1 = "", result2 = "";
+
+		//초기화
+		document.getElementById("Rtxt1").value = result1;
+		document.getElementById("Rtxt2").value = result2;
+
+		if (p1 != undefined) {
+			result1 = p1.trim();
+			if (result1 == "") {
+				toast("처리결과 없음");
+			}
+			document.getElementById("Rtxt1").value = result1;
+		}
+
+		if (p2 != undefined) {
+			result2 = p2.trim();
+			if (result2 == "") {
+				toast("처리결과 없음");
+			}
+			document.getElementById("Rtxt2").value = result2;
+		}
+
+		copy(document.getElementById("Rtxt1"));
+    };
+	
+	/*==================================
+	  그리드 자동생성
+		- 입력한 텍스트로 <w2:column> 헤더와 행코드를 자동으로 생성한다.
+
+		# INPUT 예시
+		종목코드
+		종목명
+		펀드코드
+		펀드명
+	==================================*/
+	function cvrtGrid(txt) {
+		// 최종 리턴값
+		var rtHeader = "";
+		var rtRows = "";
+
+		// 아이디 자동채번
+		var iNum = 1;
+		
+		// 문자열을 줄 바꿈 기준으로 분할하여 각 줄에 대해 처리
+		txt.split("\n").forEach(function(line) {
+			line = line.trim();	//공백 제거
+			
+			rtHeader += '<w2:column width="100" inputType="text" style="" id="column' + iNum++ + '" value="' + line + '" displayMode="label"></w2:column>\n';
+			rtRows   += '<w2:column width="100" inputType="text" style="" id="column' + iNum++ + '" value="" displayMode="label"></w2:column>\n';
+		});
+		
+		printResult(rtHeader, rtRows);
+	};
+	
+	/*==================================
+	  데이터컬렉션 자동변환
+		
+		# INPUT 예시
+		out.test_CD             := cur.test_CD              ; -- 종목 코드
+		out.test_KOR_NM         := cur.test_KOR_NM          ; -- 종목 한글 명
+		out.test_ENG_NM         := cur.test_ENG_NM          ; -- 종목 영문 명
+		
+		# OUTPUT 예시
+		<w2:column id="test_CD" name="종목 코드" dataType="text" length="" encYN="false"></w2:column>
+		<w2:column id="test_KOR_NM" name="종목 한글 명" dataType="text" length="" encYN="false"></w2:column>
+		<w2:column id="test_ENG_NM" name="종목 영문 명" dataType="text" length="" encYN="false"></w2:column>
+
+	==================================*/
+	function cvrtDataCol(txt) {
+		// 최종 리턴값
+		var sResult = "";
+		var iCntLine = 0;
+		var iCntSuccess = 0;
+		var iCntFail = 0;
+		var iCntCheck = 0;
+		var sFailInfo = "";
+		var sCheckInfo = "";
+		
+		// 문자열을 줄 바꿈 기준으로 분할하여 각 줄에 대해 처리
+		txt.split("\n").forEach(function(line) {
+			line = line.trim();	//공백 제거
+			iCntLine += 1;
+			//console.warn(line);
+			var arrColId = /out\.(\w+)/.exec(line);
+			var arrColNm = /\-\-(.*)/.exec(line);
+			
+			var sColId = arrColId != null? arrColId[1].trim() : "???";
+			var sColNm = arrColNm != null? arrColNm[1].trim() : "???";
+			
+			sColNm = sColNm.replaceAll(" ", "");
+			 
+			if (sColId == "???") { 
+				sFailInfo += "[" + iCntFail + "] " + line + "\n";
+				iCntFail += 1;
+			} else {
+				if (sColNm == "???") {
+					iCntCheck += 1;
+					sCheckInfo += "[" + iCntCheck + "] " + line + "\n";
+				} else {
+					iCntSuccess += 1;
+				}
+				sResult += '<w2:column id="' + sColId + '" name="' + sColNm +'" dataType="text" length="" encYN="false"></w2:column>\n';
+			}
+		});
+		
+		var sInfo = "총 " + iCntLine + "줄 변환\n";
+		sInfo += "성공 : " + iCntSuccess + "줄 (검토필요 : " + iCntCheck + "줄)\n";
+		sInfo += sCheckInfo;
+		sInfo += "===================\n";
+		sInfo += "실패 : " + iCntFail+ "줄\n";
+		sInfo += sFailInfo;
+		
+		printResult(sResult, sInfo);
+	};
+
+	/*==================================
+	  헤더명 추출
+	  	- <w2:column> 코드의 value="" 를 추출한다.
+
+		# INPUT 예시
+		<w2:column displayMode="label" id="column37" inputType="text" style="" value="계약환율" width="109"></w2:column>
+		<w2:column displayMode="label" id="column35" inputType="text" style="" value="계약환율" width="97"></w2:column>
+		<w2:column displayMode="label" id="column33" inputType="text" style="" value="계약금액" width="110"></w2:column>
+		<w2:column displayMode="label" id="column45" inputType="text" style="" value="계약금액" width="100"></w2:column>
+	==================================*/
+	function extrHeader(txt) {
+		// 최종 리턴값
+		var result = "";
+		
+		// 문자열을 줄 바꿈 기준으로 분할하여 각 줄에 대해 처리
+		txt.split("\n").forEach(function(line) {
+			var matches = /value="([^"]*)"/.exec(line);
+
+			if (matches) {
+				result += matches[1] + "\n";
+			} else {
+				result += "\n";
+			}
+		});
+		
+		printResult(result);
+	};
+	
+	/*==================================
+	  컴포넌트 아이디, 명 추출
+	  
+		# INPUT 예시
+		<w2:textbox class="req" id="" label="종목코드" ref="" style="" userData2=""></w2:textbox>
+		<xf:input class="req" id="ibx_itmCd" placeholder="" style="width:100%;"></xf:input>
+		
+		# OUTPUT 예시
+		종목코드 ibx_itmCd
+	==================================*/
+	function extrComponent(txt) {
+		// 최종 리턴값
+		var resultNm = "";
+		var resultId = "";
+		
+		// 문자열을 줄 바꿈 기준으로 분할하여 각 줄에 대해 처리
+		txt.split("\n").forEach(function(line) {
+			var arrColNm = /label="([^"]*)"/.exec(line);
+			var arrColId = /id="([^"]*)"/.exec(line);
+			
+			var sColNm = arrColNm != null? arrColNm[1].trim() != "" ? arrColNm[1].trim() : "???" : "???";
+			var sColId = arrColId != null? arrColId[1].trim() != "" ? arrColId[1].trim() : "???" : "???";
+			
+			if (sColNm != "???") {
+				resultNm += sColNm + "\n";
+			}
+			
+			if (sColId != "???") {
+				resultId += sColId + "\n";
+			}
+		});
+		
+		
+		printResult(resultNm, resultId);
+	};
+	
+	
+	/*==================================
+	  INPT 파라미터 제작
+	  
+		# INPUT 예시
+		4
+		
+		# OUTPUT 예시
+		  INPT_1 : 
+		, INPT_2 : 
+		, INPT_3 : 
+		, INPT_4 : 
+	==================================*/
+	function makeInpt(txt) {
+		// 최종 리턴값
+		var result = "";
+		
+		
+		for (var i = 1 ; i <= Number(txt); i ++ ) {
+			if (i < 10) {
+				result += ', INPT_' + i + '  : ""\n';
+			} else {
+				result += ', INPT_' + i + ' : ""\n';
+			}
+		}
+		
+		printResult(result);
+	};
+
+
+	/*==================================
+	  toast 토스트 알림 기능
+	==================================*/
+	let removeToast;
+	function toast(string, time) {
+		if(time == "" || time == null) {
+			time = 700;
+		}
+		const toast = document.getElementById("toast");
+		toast.classList.contains("reveal") ?
+			(clearTimeout(removeToast), 
+			  removeToast = setTimeout(function () {document.getElementById("toast").classList.remove("reveal")}, time)) 
+			: removeToast = setTimeout(function () {document.getElementById("toast").classList.remove("reveal")}, time) 
+			toast.classList.add("reveal"),
+			toast.innerText = string;
+	};
+	
+	/*==================================
+	  복사용 데이터 전역변수
+	  	- 배열 안에 문자열 데이터만큼 복사 버튼 생성됨
+	==================================*/
+	var copyArray2  = [
+	`req`
+	];
+	
+	var copyArray  = [
+	`<w2:attributes>
+										<w2:colspan>2</w2:colspan>
+										<w2:rowspan>1</w2:rowspan>
+									</w2:attributes>`
+	,
+	`<w2:column width="30"  inputType="checkbox" id="chk0" displayMode="label"></w2:column>`
+	,
+	`<w2:column width="30"  inputType="checkbox" id="chk1" displayMode="label"></w2:column>`
+	];
+	
+	/*==================================
+	  버튼을 생성하고 내용을 채우는 함수
+	==================================*/
+    function createButtons() {
+        var container = document.querySelector('.flex_col');
+		var container2 = document.querySelector('.flex_wrap');
+		
+		// 배열의 각 요소에 대해 버튼 생성
+        copyArray2.forEach(function(text, index) {
+            var button = document.createElement('button');
+            button.innerText = text;
+            button.addEventListener('click', function() {
+                copyClipboard(text);
+            });
+            container2.appendChild(button);
+        });
+		
+        // 배열의 각 요소에 대해 버튼 생성
+        copyArray.forEach(function(text, index) {
+            var button = document.createElement('button');
+            button.innerText = text;
+            button.addEventListener('click', function() {
+                copyClipboard(text);
+            });
+            container.appendChild(button);
+        });
+    };
+	
+	/*==================================
+	  가상 내용 복사
+	==================================*/
+	function copyClipboard(text) {
+        var textarea = document.createElement("textarea");
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+		toast("복사", 400);
+    };
+
+	/*==================================
+	  페이지 로드시 버튼 생성 함수 호출
+	==================================*/
+    window.onload = createButtons;
+
+</script>
+</body>
+</html>

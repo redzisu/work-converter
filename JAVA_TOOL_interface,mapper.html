@@ -1,0 +1,1522 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>redzisu</title>
+</head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+<script src="js/jszip.min.js"></script>
+<script src="js/FileSaver.js"></script>
+<script src="js/sql-formatter.min__custom.cjs"></script>
+<style>
+/*color global variable */
+:root {
+	--red 		: #cc4d29;
+	--blue 		: #0062b8;
+	--green 	: #007a5a;
+	--grey 		: #ddddddd1;
+	--darkGrey	: #b0b0b0;
+	--lightGrey : #dfdfdf29;
+	--lightGreen : #007a590c;
+}
+
+/*tab css*/
+html,body {width:100%; box-sizing: border-box;}
+body,div,ul,li{margin:0; padding:0; font-size: 13px;}
+ul,li {list-style:none;}
+.tabs{float:left; width:100%; }
+.tabnav{font-size:0; border:1px solid var(--grey);}
+.tabnav li{display: inline-block;  height:46px; text-align:center; border-right:1px solid var(--grey);}
+.tabnav li a:before{content:""; position:absolute; left:0; top:0px; width:100%; height:3px; }
+.tabnav li a.active:before{background:var(--green);}
+.tabnav li a.active{border-bottom:1px solid white;}
+.tabnav li a{ position:relative; display:block; background: white; color: black; padding:0 30px; line-height:46px; text-decoration:none;}
+.tabnav li a:hover,
+.tabnav li a.active{background:white; color:var(--green); }
+.tabcontent{border:1px solid var(--grey); border-top:none; }
+
+/* toast css */
+#toast {z-index: 10000; overflow: hidden;  visibility: hidden; opacity: 0; position: fixed; bottom: 300px; left: 50%; 
+		transform: translate(-50%, 10px); transition: opacity .5s, visibility .5s, transform .5s;
+		background: var(--darkGrey); color: white; padding: 15px 20px; border-radius: 30px;}
+#toast.reveal { opacity: 1; visibility: visible; transform: translate(-50%, 0)}
+
+/* display css*/
+.main2 {width: 100%; display: flex; flex-direction: column;}
+.main {width: 100%; display: flex; flex-direction: row;  min-height:80vh;}
+.main article {flex: 1;}
+#tabs-1 nav{min-width: 15%; }
+#tabs-2 nav{min-width: 45%; }
+#tabs-3 nav{min-width: 20%; }
+header{height: 3%; text-align : center; font-size : 1.8em; color : var(--green); }
+header, article, nav{ padding: 0.8em;}
+nav { background: var(--lightGrey); }
+
+/* input css*/
+textarea {width: 100%; box-sizing: border-box;-webkit-box-sizing:border-box;-moz-box-sizing: border-box;
+          padding: 10px;border: solid 1px var(--grey); border-radius: 5px;}
+input {	 width: 150px;  padding: 0 16px 0 12px; line-height: 30px;  height: 28px;  border: 1px solid var(--grey);	border-radius: 4px;	
+		 background-color: white; color: black;}
+
+/* button css */
+button, a { text-decoration:none; color: white; border: 0px; cursor: pointer; border-radius: 4px;  font-weight:600; }
+button:active, a:active{ position: relative; top: 2px;}
+button:hover, a:hover { opacity: 60%;}
+
+/* button_size css */
+.btn_big 	{ display: block; width: 70%; max-width: 250px; margin : 20px; padding: 15px 25px;}
+.btn_small 	{ display: inline-block; padding: 5px 15px;}
+.btn_middle { display: block;  width: 50%; margin : 10px; padding: 8px 20px;}
+
+/* button_color css */
+.blue    	{background-color: var(--blue);}
+.green   	{background-color: var(--green);}
+.red     	{background-color: var(--red);}
+.grey    	{background-color: var(--darkGrey); }
+.white   	{background-color: white; color:black; border: 1px solid var(--darkGrey); }
+.whiteGreen {background-color: white; color:var(--green); border: 0px;}
+
+/* dragdrop css */
+#dropZone_box {padding:15px; height: 170px; background-color: var(--green); border-radius: 10px;}
+#dropZone {width:100%; height: 100%; border: dotted 3px white;border-radius: 10px;color:white;}
+#dropZone > button {margin-top: 40px; width: 150px;}
+
+/* table css */
+caption {color:var(--green); text-align: left; margin: 5px; }
+table {text-align:center; width: 90%; border: 1px solid white; border-spacing: 1px; margin: auto; word-break:break-all; border-top: 3px solid var(--green);}
+table th {background-color: var(--grey); padding: 10px;}
+table td {padding: 13px; background-color: var(--lightGrey);}
+table td:nth-child(1) {text-align: left;}
+table td:nth-child(2) {text-align: left;}
+table tr:hover td {background-color: var(--grey) !important;}
+#resultTable {width:50%;}
+#resultTable th {width:150px;}
+
+</style>
+<body>
+	<header>CONVERT C to JAVA ( ಠ_ಠ )</header>
+	<div id = "tabs" class="tabs">
+		<ul class="tabnav">
+		  <li><a href="#tabs-1">단건 변환</a></li>
+		  <li><a href="#tabs-2">다건 변환</a></li>
+		  <li><a href="#tabs-3">텍스트툴</a></li>
+		</ul>
+		<div class="tabcontent">
+			<div id="tabs-1" class="main">
+				<article>
+					<h2>
+						<button class="btn_small white" onclick="reset('L')" >리셋</button>
+						<button class="btn_small blue"  onclick="copy(txtL);">복사</button>
+						<button class="btn_small green" onclick="backL();">이전</button>
+						<button class="btn_small red"   onclick="uploadSingleFile();">ec 파일 업로드</button>
+						<input id="upFileNm" class="whiteGreen" disabled></input>
+					</h2>
+					<div id="upload-section" class="upload-box">								
+					<textarea rows="40" id="txtL" onfocus="this.oldValue = this.value;" 
+												  onchange="getOldVal(this);this.oldValue=this.value;"></textarea>
+					</div>
+				</article>
+				<nav>
+				<center>
+					<button class="btn_big red"    onclick="convertMethod_onclick()">메소드 변환</button>
+					<button class="btn_big green"  onclick="convertQuery_onclick()">쿼리 변환</button>
+					<button class="btn_big green"  onclick="setXml_onclick();">xml 태그</button>
+					<button class="btn_big green"  onclick="setJusuk_onclick();">주석 수정</button>
+					<div id="toast"></div>
+				</center>
+				</nav>
+				<article>
+					<h2>
+						<button class="btn_small white"  onclick="reset('R')">리셋</button>
+						<button class="btn_small blue"  onclick="copy(txtR);">복사</button>
+						<input id="downFileNm" placeholder="파일명" ></input>
+						<button class="btn_small red"  onclick="saveAsXml(1, downFileNm.value+'.xml',txtR.value);">xml 파일 다운로드</button>
+					</h2>
+					<textarea rows="40" id="txtR" placeholder="변환 결과"></textarea>
+				</article>
+		    </div> <!--end tab01-->
+		    <div id="tabs-2" class="main">
+				<article>
+					<table class="table">
+						<caption>
+						◈ 변환 파일은 '크롬-설정-다운로드-설정된 경로'에 저장됩니다. <br>
+						◈ "변환 실패"는 파일 안에 변환할 쿼리가 없음을 뜻합니다. <br>
+						</caption>
+						<caption style="color:var(--red)">
+							<br> ***  NEW 버전 변환 방법  <br>
+							0. 우선 A,B,C 등등 ec파일을 하나로 다 합친다. (수작업) <br>
+							1. ec파일을 xml, java 파일로 변환한다. <br>
+							1-1. 만약 xml파일 수정하기 귀찮으면 기존에 수정했던거 하나로 합치고(수작업) 뉴버전으로 전환만 하면 됨. <br>
+							2. xml과 java파일에서 주석을 수정한다. (수작업) <br>
+							3. 주석 수정된 xml, java 파일을 Mapper, Impl파일로 변환한다.
+							</caption>
+						<thead>
+							<tr>
+								<th width="20%">파일명(<span id="rowCnt"></span>)</th>
+								<th width="35%">파일크기</th>
+								<th width="15%">상태</th>
+								<th width="15%"><button onclick='saveAsZip(); return false;' class='btn_small blue' >전체 저장</button></th>
+								<th width="15%"><button onclick='deleteFile("all"); return false;' class='btn_small grey' >전체 삭제</button></th>
+							</tr>
+						</thead>
+						<tbody id="tbodyFile">
+						</tbody>
+					</table>
+				</article>
+				<nav>
+					<center>
+						<div id="dropZone_box">
+							<div id="dropZone">
+								<button class="btn_big whiteGreen" onclick="addFile();">파일 추가</button>
+								또는 파일을 여기로 끌어 놓으세요.
+							</div>
+						</div>
+						<button class="btn_big red" onclick="uploadMultiFile('convert'); return false;">1. .ec을 .xml, .java로</button>
+						<button class="btn_big red" onclick="uploadMultiFile('newXmlFile'); return false;">1-1. 과거 xml 뉴버전으로 변환 </button>
+						<button class="btn_big red" onclick="uploadMultiFile('binFile'); return false;">3-1. .xml을 Mapper.java로 </button>
+						<button class="btn_big red" onclick="uploadMultiFile('ImplFile'); return false;">3-2. .java을 Impl.java로 </button>
+						<button class="btn_big green" onclick="uploadMultiFile('changeJusuk'); return false;">주석 줄맞춤 수정 </button>
+						<!--<button class="btn_big red" onclick="uploadMultiFile('binFile2'); return false;">빈 파일 만들기(ec)</button>
+						<button class="btn_big red" onclick="uploadMultiFile('binFile'); return false;">빈 파일 만들기(xml)</button>-->
+						<!--<button class="btn_big grey" onclick="uploadMultiFile(''); return false;"></button>-->
+						<br><br><br>
+						<table id="resultTable">
+							<tr>
+								<th>총 파일 개수</th>
+								<th><input id="ipTotal" value="0" disabled/></th>
+							</tr>
+							<tr>
+								<th>변환 성공</th>
+								<th><input id="ipSuccess" value="0" disabled/></th>
+							</tr>
+							<tr>
+								<th>변환 실패</th>
+								<th><input id="ipFail" value="0" disabled/></th>
+							</tr>
+						</table>
+						<div id="toast"></div>
+					</center>
+				</nav>
+		    </div><!--end tab02-->
+			<div id="tabs-3" class="main">
+			<nav>
+				<center>
+					<button class="btn_big red"    onclick="txtBox2.value = gubunText(txtBox1.value); copy(txtBox2);">.put("".get(""));</button>
+					<button class="btn_big red"    onclick="txtBox2.value = gubunText_put(txtBox1.value); copy(txtBox2);">put("")</button>
+					<button class="btn_big red"    onclick="txtBox2.value = gubunText_get(txtBox1.value); copy(txtBox2);">.get("")</button>
+					<button class="btn_big red"    onclick="txtBox2.value = gubunText_getBigDecimal(txtBox1.value); copy(txtBox2);">.getBigDecimal("")</button>
+					<button class="btn_big red"    onclick="txtBox2.value = spacePretttest(txtBox1.value); copy(txtBox2);">줄맞추기</button>
+					<button class="btn_big red"    onclick="txtBox2.value = changeJusukNEW(txtBox1.value); copy(txtBox2);">주석변환</button>
+					<button class="btn_big red"    onclick="txtBox2.value = makeDataSet(txtBox1.value); copy(txtBox2);">DataSet 만들기</button>
+					<button class="btn_middle green"  onclick="customCopy(1);">code 1 복사</button>
+					<button class="btn_middle green"  onclick="customCopy(2);">//--- 복사</button>
+					<button class="btn_middle green"  onclick="customCopy(3);">getBigDecimal 복사</button>
+					<button class="btn_middle green"  onclick="customCopy(4);">getString 복사</button>
+					<button class="btn_middle green"  onclick="customCopy(5);">TEN 복사</button>
+					<button class="btn_middle green"  onclick="customCopy(6);">ZERO 복사</button>
+					<div id="toast"></div>
+				</center>
+			</nav>
+			<div class="main2">
+				<textarea rows="2" id="txtBox0" ></textarea>
+				<div class="main">
+					<article>					
+						<textarea rows="40" id="txtBox1" ></textarea>
+					</article>
+					<article>					
+						<textarea rows="40" id="txtBox2"></textarea>
+					</article>
+					<!--
+					<article>					
+						<textarea rows="40" id="txtBox3" style="background-color: var(--lightGreen)"></textarea>
+					</article>
+				     -->
+				</div>
+			</div>
+			
+			</div>
+		</div><!--end tabContent-->
+	</div><!--end tab-->
+<script type="text/javascript">
+	var outputL = "";
+	var outputR = "";
+	
+	/*==============================================================
+	  ## 메소드 변환
+	  getMethod -> getQuery -> convertQuery -> setTag
+	================================================================*/
+	/*==================================
+	  getMethod 	- 문서에서 함수 추출
+	==================================*/
+	function getMethod(pStr) {
+		outputR = "";
+		oldVal = pStr;
+
+		// GATEWAY 문자열을 기준으로 문자열 분리
+		var mArr = pStr.split(/\s*\(\s*GATEWAY\s*\*\s*p/gim);
+
+		// 문자열 분리 결과를 반복문으로 순회
+		for(var n = 0; n < mArr.length-1; n++) {
+			var mId, mContent, jusuk;
+
+			mId = lastWord(mArr[n]);	//함수명		: n행의 맨 마지막 단어
+			mContent = mArr[n+1];		//함수내용		: n행에서 추출된 함수명을 가진 함수의 내용
+			jusuk = extractLastComment(mArr[n]);
+			 // 함수 정보 문자열 생성
+			outputL  = outputL + "\n========================================================================\n" + 
+								 jusuk + "\n" + 
+								 "### ("+n+") " + mId + "\n\n";
+
+			// 함수에서 쿼리 추출
+			getQuery(mId, mContent);	
+		}
+
+		//문자열의 마지막 단어 추출
+		function lastWord(str) {
+			const words = str.trim().split(/\s+/);
+			return words[words.length - 1];
+		}
+
+		//함수 주석 추출
+		function extractLastComment(string) {
+			// 문자열을 뒤집습니다.
+			const reversedString = string.split("").reverse().join("");
+			
+			var  strArr = reversedString.match(/\/\*[\s\S]*?\*\/|\/\/.*/gim);
+			if (strArr == null) {
+				return "";
+			} 
+			else {
+				var str = strArr.join("\n");
+				// 추출한 문자열을 다시 뒤집어서 원래 문자열의 주석 형식을 추출합니다.
+				return str.split("").reverse().join("");
+			}
+		}
+	};
+
+	/*==================================
+	  getQuery 	- 함수에서 쿼리 추출
+	==================================*/
+	var sCnt, dCnt, uCnt, iCnt;
+	function getQuery(pId, pStr) {
+		let sArr, qArr, qContent;
+		
+		//주석(/**/, //) 되어있는 쿼리문 제거 
+		//pStr = pStr.replace(/\/\*[\s\S]*?EXEC[^;]*;?[^;]*;\s*[\s\S]*?\*\//gim, '');
+		pStr = pStr.replace(/\/\*[\s]*?EXEC[^;]*;?[^;]*;\s*[\s]*?\*\//gim, '');
+		pStr = pStr.replace(/\/\/\s*EXEC[^;]*;?[^;]*;/gim, '');
+
+		//쿼리문 추출 - EXEC 로 시작하고 ; 로 끝나는 문장
+		sArr = pStr.match(/EXEC[^;]*;?[^;]*;/gim);
+		if(sArr == null) { return; }
+		console.warn(sArr);
+		//쿼리문 가공 - select, insert, update, delete문만 따로 뽑기
+		let reg = /^.*?\b(update|select|delete|insert)\s+/gis;
+		qArr = sArr.map(str => str.replace(reg,'$1 '));
+		qContent = qArr.join("\n");
+		outputL = outputL + qContent + "\n";
+		console.warn(qContent);
+		//쿼리 변환
+		sCnt = 1, dCnt = 1, uCnt = 1, iCnt = 1;
+		//console.warn(qContent);
+		convertQuery(pId, qContent);
+	};
+
+	/*==================================
+	  convertQuery  - 쿼리 변환
+	==================================*/
+	function convertQuery(pId, pStr) {
+		pStr = pStr.toUpperCase().trimStart();
+		
+		//select문에서 into 문장 없애기
+		pStr = pStr.replace(/(?<!INSERT\s+)(INTO\s+[^\s]+\s+)/gims, '');
+		
+		// :()& 문자열 치환
+		pStr = pStr.replace(/\:\([^\s\)]+\)\&?/gim, "#P_" );
+		
+		// #P_xxx.abc #P_xxx->abc 문자열 치환
+		pStr = pStr.replace(/\#P\_(\S+?)(?<=[\.\>])/gim, "#P_" );
+		
+		// #p_으로 시작하는 단어 뒤에 #붙여주기
+		pStr = pStr.replace(/#P\_([ㄱ-ㅎ가-핳a-zA-Z0-9_]+)/gim, shap);
+		function shap(match) {
+			let res1 = match+'#';
+			let res2 = res1.replace(/\n/g,"");
+			return res2;
+		};
+		
+		// _ _ 중복 없애기
+		pStr = pStr.replace(/#P__/gim, "#P_");
+		
+		// p_p_ 중복 없애기
+		pStr = pStr.replace(/P_P_/gim, "P_");
+
+		// ## 중복 없애기
+		pStr = pStr.replace(/\#\#/gim, "#");
+
+		let qArr = pStr.match(/(SELECT|INSERT|UPDATE|DELETE)\s[^\;]*/gim);
+		if(qArr==null) {  return; }
+		
+		//쿼리 태그 씌우기 및 포맷 수정
+		for(let i=0; i<qArr.length;i++) {
+			qArr[i] = setTag(pId, setFormat(qArr[i]), qArr.length, i);
+		}
+
+		let result = qArr.join("\n").replace(";","");
+		outputR  = outputR + "\n" + result;
+		toast("변환 성공");
+	};
+	
+	/*==================================
+	  setTag - 쿼리 태그 추가
+	==================================*/
+	function setTag(pId, pStr, len, i) {	
+		
+		//하나의 함수 안에 쿼리 여러개 잇으면 _1, _2 자동 카운팅
+		//let qId = (len <= 1)? pId : pId + "_" + (i+1);
+
+		//쿼리 종류에 따라 id 카운팅
+		let qtag = /SELECT|INSERT|UPDATE|DELETE/.exec(pStr)[0].toLowerCase();
+		let qId = pId + "_" + qtag.charAt(0).toUpperCase();
+
+		if(sCnt > 0 && qtag == 'select') { 
+			qId = qId + sCnt++;
+		}
+		else if(iCnt> 0 && qtag == 'insert') { 
+			qId = qId + iCnt++;
+		}
+		else if(uCnt > 0 && qtag == 'update') { 
+			qId = qId + uCnt++;
+		}
+		else if(dCnt > 0 && qtag == 'delete') { 
+			qId = qId + dCnt++;
+		}
+
+		//myBatis 형식	
+		let qheader1 ="<"+qtag+" id=\""+qId+"\" parameterType=\"map\" resultType=\"jscom.util.DataSet\"><![CDATA[\n    /*  */\n" ;
+		let qheader2 ="<"+qtag+" id=\""+qId+"\" parameterType=\"map\"><![CDATA[\n    /*  */\n" ;
+		let qfooter ="\n]]>\n</"+qtag+">";
+
+		if(qtag == 'select') {
+			return qheader1 +  pStr + qfooter;
+		} else {
+			return qheader2 +  pStr + qfooter;
+		}
+
+		//iBatis 형식
+		//let qheader ="<"+qtag+" id=\""+qId+"\" parameterClass=\"map\" resultClass=\"hmap\"><![CDATA[\n" ;
+
+	};
+	
+	/*==================================
+	  xml 태그 추가
+	==================================*/
+	function setXml(fileNm, pStr) {
+		//ibatis 형식
+		let xheader1 = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + 
+					  "<!DOCTYPE sqlMap PUBLIC \"-//iBATIS.com//DTD SQL Map 2.0//EN\" \"http://www.ibatis.com/dtd/sql-map2.dtd\">\n" + 
+					  "<sqlMap namespace=\"__{$NAMESPACE}__\">";
+		let	xfooter1 = "\n</sqlMap>";
+
+		//myBatis 형식
+		let xheader2 = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + 
+					  "<!DOCTYPE mapper PUBLIC \"-//mybatis.org//DTD Mapper 3.0//EN\" \"http://mybatis.org/dtd/mybatis-3-mapper.dtd\">\n" + 
+					  "<mapper namespace=\""+packageName+".impl."+fileNm+"Mapper\">";
+		let	xfooter2 = "\n</mapper>";
+
+		if(pStr.startsWith(xheader1)&&pStr.endsWith(xfooter1)) {
+			toast("xml 태그 변경");
+			return  pStr.replace(xheader1, xheader2).replace(xfooter1, xfooter2);
+		} else if((pStr.startsWith(xheader2)&&pStr.endsWith(xfooter2))||pStr=="") { 
+			return; 
+		} else {
+			toast("xml 태그 추가");
+			return xheader2 + pStr + xfooter2;
+		}
+	};
+
+	/*==================================
+	  쿼리 포맷 수정
+	    - 쉼표사이 공백 다 없애기
+	    - 괄호사이에 있는 쉼표는 무시하기
+	    - 쉼표를 기준으로 단어 나누기
+	    - 나눈 단어에서 공백을 기준으로 다시 나누기
+	    - 거기서 젤 긴 단어를 기준으로 공백 채우기
+	==================================*/
+	function setFormat(txtVal)
+    {	
+		txtVal = txtVal.replace(/(\s*)\,(\s*\/\*.+\*\/)(\s*)/gim,'$1 $2,$3');
+		txtVal = txtVal.replace(/(INSERT[^(]*\()/gim, '$1\n');
+		txtVal = txtVal.replace(/\#\{([a-zA-Z0-9_]+)\}/gim, '#$1#');
+		
+		var format = window.sqlFormatter.format;
+		var pStr = format(txtVal, {
+			language : "plsql",					//언어 : 오라클PL/SQL
+			tabulateAlias: true,				//열별칭 구분
+			commaPosition : "before",			//쉼표 앞쪽으로
+			keywordCase : "upper",				//대문자
+			expressionWidth : "30",				//괄호로 묶인 표현식의 최대 길이
+			logicalOperatorNewline : "before",	//부울(and, or등) 앞쪽으로 개행
+			indentStyle: "tabularRight",		//워드를 오른쪽으로 정렬하여 10개의 공백이 있는 테이블 형식으로 들여쓰기
+			paramTypes: { named: ['#', '@']},	//매개변수 유형
+		});
+
+		pStr = pStr + "\n";
+		pStr = pStr.replace(/(.+)\n/gim, ' $1\n');
+		pStr = pStr.replace(/(\s*)(\/\*.+\*\/)/gim, ' $2');
+
+
+		var regXP = /(?<=\s)[^\s]+?(?=\s([\=\>\<\:\!]+|LIKE|IN|BETWEEN|\/\*|\<\>)\s)/gim;
+		var arr = pStr.match(regXP);
+		pStr = pStr.replace(regXP, changeSpace);
+		function changeSpace (str) {
+			var sorted = arr.sort((a,b) => b.length - a.length);
+			var longestLength = sorted.map(value => value.length)[0];
+			str = str + ' '.repeat(longestLength-str.length);
+			return str;
+		};
+
+		if(pStr.includes(' LIKE ')) {
+			pStr = pStr.replace(/\s([\=\>\<\:])\s/gm, '    $1 ');
+			pStr = pStr.replace(/\s(\<\=|\>\=|\<\>|IN)\s/gm, '   $1 ');
+		} else {
+			if(pStr.includes(' <> ') || pStr.includes(' != ') || pStr.includes(' >= ') || pStr.includes(' <= ') || pStr.includes(' IN ')) {
+				pStr = pStr.replace(/\s([\=\>\<\:])\s/gm, '  $1 ');
+				pStr = pStr.replace(/\s(\<\=|\>\=|\<\>|IN|\!\=)\s/gm, ' $1 ');
+			}
+		}
+		pStr = pStr.replace(/\s(NOT\s+IN)\s/gm, ' NOT IN ');
+
+
+		var regXP2 = /(?<=\/\*).+?(?=\*\/)/gim;
+		var arr2 = pStr.match(regXP2);
+		if(arr2 != null) {
+			for(var i=0; i<arr2.length; i++) {
+				arr2[i] = arr2[i].trim();
+			}
+			pStr = pStr.replace(regXP2, changeSpace2);
+			function changeSpace2 (str) {
+				str = str.trim();
+				var sorted = arr2.sort((a,b) =>  b.length - a.length);
+				var longestLength = sorted.map(value => value.length)[0];
+				str = str + ' '.repeat(longestLength-str.length );
+				return ' ' + str + ' ';
+			}
+		}
+
+		pStr = pStr.replace(/(SELECT)\s+([^\s]+)/gim, '$1 $2');
+		pStr = pStr.replace(/(DELETE)\s(FROM.+)/gim, '$1\n      $2');
+		pStr = pStr.replace(/(INSERT)\s(INTO.+)(\()/gim, '$1\n      $2\n         $3');
+		pStr = pStr.replace(/(VALUES)\s+(\()/gim, '$1\n         $2');
+		pStr = pStr.replace(/\s\s\)/gim, ")");
+		pStr = pStr.slice(0, pStr.length - 1);
+		pStr = pStr.replace(/(\#)(\w+)(\#)/gim,'#{$2}');
+
+		
+
+		pStr = pStr.replace(/group by [\s\S]*(?<=order)/gim, changeSpace4);
+		function changeSpace4 (str) {
+			str = str.replace(/\n\s*,/gm, '\n            ,');
+			return '   ' + str;
+		}
+
+		pStr = pStr.replace(/ORDER BY [\s\S]*/gim, changeSpace3);
+		function changeSpace3 (str) {
+			str = str.replace(/\n\s*,/gm, '\n            ,');
+			return '   ' + str;
+		}
+		
+
+		return pStr;
+    };
+	
+	/*==================================
+	  버튼 클릭시
+	==================================*/
+	function convertMethod_onclick() {
+		getMethod(document.getElementById("txtL").value); 
+		document.getElementById("txtL").value = outputL;
+		document.getElementById("txtR").value = setXml(document.getElementById("upFileNm").value,outputR);
+		outputL = ""; 
+		outputR = "";
+	};
+	
+	function convertQuery_onclick() {
+		convertQuery('', document.getElementById("txtL").value);
+		document.getElementById("txtR").value = outputR;
+		outputL = ""; 
+		outputR = "";
+	};
+	
+	function setXml_onclick() {
+		document.getElementById("txtR").value = setXml("",document.getElementById("txtR").value);
+	};
+
+	function setJusuk_onclick() {
+		document.getElementById("txtR").value = changeJusuk(document.getElementById("txtL").value);
+	};
+
+	/*==================================
+	  textarea 복사
+	==================================*/
+	function reset(type) {
+       if(type=='L') {
+		document.getElementById("txtL").value ="";
+		document.getElementById("upFileNm").value ="";
+		document.getElementById("downFileNm").value ="";
+	   } else if(type == 'R') {
+		document.getElementById("txtR").value ="";
+		document.getElementById("downFileNm").value ="";
+	   }
+	};
+
+	/*==================================
+	  textarea 복사
+	==================================*/
+	function copy(textArea) {
+        textArea.select();
+        document.execCommand('copy');
+	};
+
+	/*==================================
+	  이전버튼 클릭시
+	==================================*/
+	var oldVal;
+	function getOldVal(textbox) {
+        oldVal = textbox.oldValue;
+	};
+	
+	function backL() {
+        document.getElementById("txtL").value = (oldVal==null)? "" : oldVal;
+		document.getElementById("txtR").value ="";
+		document.getElementById("upFileNm").value ="";
+		document.getElementById("downFileNm").value = "";
+	};
+
+	/*==================================
+	  toast 토스트 알림 기능
+	==================================*/
+	let removeToast;
+	function toast(string) {
+		const toast = document.getElementById("toast");
+		toast.classList.contains("reveal") ?
+			(clearTimeout(removeToast), 
+			  removeToast = setTimeout(function () {document.getElementById("toast").classList.remove("reveal")}, 1000)) 
+			: removeToast = setTimeout(function () {document.getElementById("toast").classList.remove("reveal")}, 1000) 
+			toast.classList.add("reveal"),
+			toast.innerText = string
+	}
+	
+	/*==================================
+	  textarea placeholder 설정
+	==================================*/
+	window.onload = function() {
+		var phStr = "변환할 내용\n\n"+
+					 "* 드래그로 파일 업로드 가능\n\n" +
+					 "* [메소드 변환] \n-> 파일 전체 혹은 methodId(GATEWAY..{} 형태로 입력하세요. \n" +
+					 "-> 함수명과 쿼리를 자동 추출하여 변환합니다. \n" +
+					 "-> 하나의 함수에 쿼리가 여러개일 경우 \"함수명_숫자\"로 쿼리명을 자동생성합니다.\n\n" +
+					 "* [쿼리 변환]\n-> select/insert/update/delete문 형태로 입력하세요.";
+		$("textarea#txtL").attr("placeholder", phStr);
+    };
+	
+	/*==================================
+	  좌측 textarea 값 변경시 초기화
+	==================================*/
+	$("#txtL").on("propertychange change keyup paste input", function() {
+			document.getElementById("txtR").value = "";
+			document.getElementById("downFileNm").value = "";
+			document.getElementById("upFileNm").value = "";
+		});
+		
+	/*==================================
+	  단건 파일 업로드
+	==================================*/
+	//초기화
+	$(function(){
+		init();
+	});
+
+	//단건 파일 Drag&Drop 업로드
+	const init = () => {
+		const uploadBox = document.querySelector('#upload-section');
+		
+		//Chrome의 경우 DragOver한 파일을 Drop시 해당 파일 내용을 브라우저에 띄워주기 때문에
+		//dragover와 drop 이벤트의 기본 기능을 preventDefault를 이용해 막아준다.
+		uploadBox.addEventListener('dragover', function(e) {
+			e.preventDefault();
+		});
+		
+		uploadBox.addEventListener('drop', function(e){
+			e.preventDefault();
+			//DataTransfer로 받아올 수 있음
+			const data = e.dataTransfer;
+			//유효성 검사
+			if(!isValid(data)) return;
+			
+			readFile(data.files[0]);
+		});
+	}
+	
+	//파일 유효 검사
+	const isValid = (data) => {
+		if(data.types.indexOf('Files') < 0) return false;
+		if(data.files.length > 1) {
+			alert('파일은 한개씩 업로드하세요.');
+			return false;
+		}
+		return true;
+	};
+	
+	//파일 Button 업로드
+	function uploadSingleFile() {
+		var input = document.createElement("input");
+		input.type = "file";
+		input.accept = ".ec, .xml, .java";
+		input.onchange = function (event) {
+			readFile(event.target.files[0]);
+		};
+		input.click();
+	}
+	
+	function readFile(file) {
+		var reader = new FileReader();
+		reader.fileName = file.name;
+		reader.onload = function (e) {
+			var fname = e.target.fileName.replace(/\.\w+/gim, "");
+			document.getElementById("upFileNm").value = e.target.fileName;
+			document.getElementById("downFileNm").value = fname;
+			document.getElementById("txtL").value = reader.result;
+			document.getElementById("txtR").value = "";
+		};
+		reader.readAsText(file, "utf-8");
+	}
+	
+	/*==================================
+	  TAB 기능 구현
+	==================================*/
+	$(function(){
+		var index = 'qpsstats-active-tab';
+		var dataStore = window.sessionStorage;
+		var oldIndex = dataStore.getItem(index);
+		if(oldIndex == null) { oldIndex = 0 };
+		$('.tabnav a').filter(':eq('+ oldIndex + ')').addClass('active');
+		$( "#tabs" ).tabs({
+			active: oldIndex,
+			activate: function(event, ui) {
+				var newIndex = ui.newTab.parent().children().index(ui.newTab);
+				dataStore.setItem( index, newIndex );
+				location.reload();
+			}
+		});
+	});
+
+	/*==================================
+	  다건 파일 업로드
+	==================================*/
+	var fileCnt = 0;				// 총 파일 개수
+    var fileIndex = 0;				// 파일 리스트 번호
+    var fileList = new Array();		// 파일 리스트
+
+	//버튼으로 파일 추가
+	function addFile() {
+		var input = document.createElement("input");
+		input.type = "file";
+		input.accept = ".ec, .xml, .java";			//ec파일만 업로드 가능
+		input.multiple = "multiple";
+		input.onchange = function (e) {
+			//파일 업로드
+			var files = [...input.files];
+            selectFile(files);
+		};
+		input.click();
+	};
+	
+    // 드롭다운으로 파일 추가
+	$(function (){ dropDownFile(); });
+    function dropDownFile(){
+        var dropZone = $("#dropZone");
+		dropZone.on('dragenter',function(e){ e.stopPropagation(); e.preventDefault(); dropZone.css('background-color','#cce3de'); });
+		dropZone.on('dragleave',function(e){ e.stopPropagation(); e.preventDefault(); dropZone.css('background-color','var(--green)'); });
+        dropZone.on('dragover',function(e){ e.stopPropagation(); e.preventDefault(); dropZone.css('background-color','#cce3de'); });
+        dropZone.on('drop',function(e){ e.preventDefault(); dropZone.css('background-color','var(--green)');
+			//파일 업로드
+            var files = e.originalEvent.dataTransfer.files;
+            selectFile(files);
+        });
+    };
+ 
+    // 파일 선택시
+    function selectFile(files){
+        if(files != null){
+            for(var i = 0; i < files.length; i++){
+                var fileName = files[i].name;					// 파일명
+				var fileNameArr = files[i].name.split("\.");	// 파일명 배열
+				var fileSize = files[i].size / 1024;			// 파일 사이즈(단위 : KB)
+                var ext = fileNameArr[fileNameArr.length - 1];	// 확장자
+
+                if($.inArray(ext, ['xml', 'ec', 'java']) == -1){
+                    alert(".ec 파일이 아닙니다.");
+                    break;
+                } else{
+					fileList[fileIndex] = files[i];					//파일 목록 생성
+					addFileTable(fileIndex, fileName, fileSize);	//파일 목록 화면에 표시
+                    fileIndex++;
+					fileCnt++;
+					$('#rowCnt').html(fileCnt);						//파일 개수
+                }
+            }
+        } else{
+            alert("error");
+        }
+    };
+	
+    // 파일 목록 테이블 생성
+    function addFileTable(fIndex, fName, fSize){
+		var html = 
+		`<tr id="tr_${fIndex}">
+        	<td>${fName}</td>
+			<td>${fSize} KB</td>
+			<td id='proc'>대기중</td>
+			<td id='down'></td>
+			<td><button onclick='deleteFile("${fIndex}"); return false;' class='btn_small grey'>삭제</button></td>
+         </tr> `;
+		 
+        $('#tbodyFile').append(html);
+    };
+ 
+    // 업로드 파일 삭제
+    function deleteFile(fIndex){
+		if(fIndex == "all") {
+			fileCnt = 0;
+			fileList.length = 0;
+			$("#tbodyFile *").remove();
+		} else {
+			fileCnt--;
+			delete fileList[fIndex];				 // 파일 배열에서 삭제
+			$("#tr_" + fIndex).remove();			 // 업로드 파일 테이블 목록에서 삭제
+		}
+		$('#rowCnt').html(fileCnt);
+
+		//초기화
+		zip = new JSZip();
+		$('#tbodyFile #proc').html('대기중').css({color:'black'});
+		$('#tbodyFile #down').html('');
+		$("#ipTotal").val(fileCnt);
+		$("#ipSuccess").val(0);
+		$("#ipFail").val(0);
+    };
+
+    // 파일 등록
+	var packageName = "";
+    function uploadMultiFile(type){
+        var convertFileList = Object.keys(fileList);
+
+		// 파일이 있는지 체크
+        if(convertFileList.length == 0){
+            alert("파일이 없습니다.");
+            return;
+        }
+		if(type == 'convert') {
+			if(confirm("변환 하시겠습니까?")){
+				packageName = prompt( '패키지 경로', 'jscom.common' ); 
+				for(var i = 0; i < convertFileList.length; i++){
+					convertFiles(fileList[convertFileList[i]],convertFileList[i]);
+				}
+				$("#ipTotal").val(fileCnt);
+			}
+		}
+		else if(type == 'binFile') {
+			if(confirm("빈 파일 생성하시겠습니까?")){
+				packageName = prompt( '패키지 경로', 'jscom.common' ); 
+				for(var i = 0; i < convertFileList.length; i++){
+					createBinFiles(fileList[convertFileList[i]],convertFileList[i]);
+				}
+				$("#ipTotal").val(fileCnt);
+			}
+		}
+		else if(type == 'ImplFile') {
+			if(confirm("ImplFile 파일 생성하시겠습니까?")){
+				packageName = prompt( '패키지 경로', 'jscom.common' ); 
+				for(var i = 0; i < convertFileList.length; i++){
+					convertImplFiles(fileList[convertFileList[i]],convertFileList[i]);
+				}
+				$("#ipTotal").val(fileCnt);
+			}
+		}
+		else if(type == 'newXmlFile') {
+			if(confirm("xml 변환 생성하시겠습니까?")){
+				packageName = prompt( '패키지 경로', 'jscom.common' ); 
+				for(var i = 0; i < convertFileList.length; i++){
+					convertXmlFiles(fileList[convertFileList[i]],convertFileList[i]);
+				}
+				$("#ipTotal").val(fileCnt);
+			}
+		}
+
+		else if(type == 'changeJusuk') {
+			if(confirm("주석 별표 맞추깅")){
+				for(var i = 0; i < convertFileList.length; i++){
+					changeJusukFile(fileList[convertFileList[i]],convertFileList[i]);
+				}
+				$("#ipTotal").val(fileCnt);
+			}
+		}
+    };
+	
+	//파일 변환
+	function convertFiles(file, i) {
+		var reader = new FileReader();
+		reader.fileName = file.name;
+		reader.onload = function (e) {
+			getMethod(reader.result);
+			//if(outputR != "") {
+				var fname = /\w+/g.exec(e.target.fileName)[0];
+				let fnameDae = fname.charAt(0).toUpperCase() + fname.slice(1);
+				var fname2 = fnameDae+".xml";
+				//var url = saveAsXml(2, fname2, setXml(fnameDae,  outputR));
+				if(outputR != "") { saveAsXml(2, fnameDae+".xml", setXml(fnameDae,  outputR)); }
+
+				outputL = outputL.match(/(?:\={0,7})([\s\S]*?)(?:\#\#\#\s\([0-9]+\)\s)(\w+)/gim).join("\n");
+				saveAsXml(2, fnameDae+".java", createJAVA(2, fnameDae, outputL));
+				outputL = "";
+				
+				$("#tr_" + i + " #proc").html("변환 성공").css({color:'var(--blue)'});
+				//$("#tr_" + i + " #down").html("<a class='btn_small blue' download="+ fname2 +" href="+  url +">저장</a>");
+				$("#ipSuccess").val(Number($("#ipSuccess").val())+1);
+			//} else {
+			//	$("#tr_" + i + " #proc").html("변환 실패").css({color:'var(--red)'});
+			//	$("#ipFail").val(Number($("#ipFail").val())+1);
+			//}
+		};
+		reader.readAsText(file, "utf-8");
+	};
+
+	/*==================================
+	  변환 파일.xml파일로 저장
+	==================================*/
+	var zip = new JSZip();
+	function saveAsXml(type, fileName, content) {
+		var blob = new Blob([content], { type: 'text/plain' });
+		
+		if(type == 1) {	//버튼 누르자마자 다운
+			saveAs(blob, fileName);
+		} else {		//다운로드 링크 생성
+			zip.file(fileName, content);
+			
+			objURL = window.URL.createObjectURL(blob);
+			return objURL;
+		}
+	};
+
+	/*==================================
+	  변환 파일 .zip파일로 한번에 저장
+	==================================*/
+	function saveAsZip() {
+		if(Object.keys(zip.files).length > 0) {
+			var zipFileName = prompt( '다음 이름으로 zip파일 저장', 'converted' );
+			zip.generateAsync({ type: "blob" }).then(
+				function (blob) {
+					saveAs(blob, zipFileName+'.zip');
+				}
+			);
+		} else {
+			alert("다운로드할 파일이 없습니다.");
+			return;
+		}
+	};
+
+	/*==================================
+	  빈 파일 만들기
+	==================================*/
+	function createBinFiles(file, i) {
+		var reader = new FileReader();
+		reader.fileName = file.name;
+		reader.onload = function (e) {
+			var fname = /\w+/g.exec(e.target.fileName)[0];
+			let fnameSo = fname.charAt(0).toLowerCase() + fname.slice(1);
+			let fnameDae = fname.charAt(0).toUpperCase() + fname.slice(1);
+			let content = reader.result.match(/(?:\<)(?:(insert|select|delete|update)\s+id\=\")(\w+)(?:\")(?:.+)(?:\<\!\[CDATA\[\s+\/\*\s)(.+)(?:\*\/)/gim).join("\n");
+			console.warn(content);
+			//saveAsXml(2, fnameDae+".java", createJAVA(1, fnameDae, content));
+			//saveAsXml(2, "impl/" + fnameDae+"Impl.java", createImpl(1, fname, fnameDae, content));
+			var url =  saveAsXml(2,  fnameDae+"Mapper.java", createMapper(1, fnameSo, fnameDae, content));
+			//saveAsXml(2,  "xml/" + fnameDae+".xml", createNewXml( fnameDae, reader.result));
+			
+			$("#tr_" + i + " #proc").html("변환 성공").css({color:'var(--blue)'});
+			$("#tr_" + i + " #down").html("<a class='btn_small blue' download="+ fnameDae+"Mapper.java" +" href="+  url +">저장</a>");
+			$("#ipSuccess").val(Number($("#ipSuccess").val())+1);
+		};
+		reader.readAsText(file, "utf-8");
+	};
+
+	/*==================================
+	  빈 파일 만들기
+	==================================*/
+	function createBinFiles2(file, i) {
+		var reader = new FileReader();
+		reader.fileName = file.name;
+		reader.onload = function (e) {
+			var fname = /\w+/g.exec(e.target.fileName)[0];
+			let fnameSo = fname.charAt(0).toLowerCase() + fname.slice(1);
+			let fnameDae = fname.charAt(0).toUpperCase() + fname.slice(1);
+			getMethod(reader.result);
+			outputL = outputL.match(/(?:\={0,7})([\s\S]*?)(?:\#\#\#\s\([0-9]+\)\s)(\w+)/gim).join("\n");
+
+			//saveAsXml(2, fnameDae+".java", createJAVA(2, fnameDae, outputL));
+			var url = saveAsXml(2, fnameDae+"Impl.java", createImpl(2, fnameSo, fnameDae, outputL));
+			//saveAsXml(2,  "impl/" + fnameDae+"Mapper.java", createMapper(2, fname, fnameDae, outputL));
+			//saveAsXml(2,  "xml/" + fnameDae+".xml", createNewXml( fnameDae, reader.result));
+			outputL = "";
+			$("#tr_" + i + " #proc").html("변환 성공").css({color:'var(--blue)'});
+			$("#tr_" + i + " #down").html("<a class='btn_small blue' download="+ fnameDae+"Impl.java" +" href="+  url +">저장</a>");
+			$("#ipSuccess").val(Number($("#ipSuccess").val())+1);
+		};
+		
+		reader.readAsText(file, "utf-8");
+	};
+
+	/*==================================
+	  빈 파일 만들기
+	==================================*/
+	function convertXmlFiles(file, i) {
+		var reader = new FileReader();
+		reader.fileName = file.name;
+		reader.onload = function (e) {
+			var fname = /\w+/g.exec(e.target.fileName)[0];
+			let fnameSo = fname.charAt(0).toLowerCase() + fname.slice(1);
+			let fnameDae = fname.charAt(0).toUpperCase() + fname.slice(1);
+
+			saveAsXml(2,  "xml/" + fnameDae+".xml", createNewXml( fnameDae, reader.result));
+			
+			$("#tr_" + i + " #proc").html("변환 성공").css({color:'var(--blue)'});
+			$("#tr_" + i + " #down").html("<a class='btn_small blue' download="+ fnameDae+".xml" +" href="+  url +">저장</a>");
+			$("#ipSuccess").val(Number($("#ipSuccess").val())+1);
+		};
+		reader.readAsText(file, "utf-8");
+	};
+
+	function createStr(type, content) {
+		var format = "";	
+		var arr1 = [], arr2 = [];
+		var i1  = 0, i2 = 0;
+		content = content.replace(/(?:\<)(?:(insert|select|delete|update)\s+id\=\")(\w+)(?:\")(?:.+)(?:\<\!\[CDATA\[\s+\/\*\s)(.+)(?:\*\/)/gim, matched);
+		function matched(match, jong, id, comment) {
+			//var id2 = id.slice(0,-3);
+			var id2 = id.replace(/_[^_]*$/gim, '');
+			if(comment.trim() == "") { comment = "함수설명" ;}
+			if(type == "java") {
+				format = 
+`
+	/**
+	 * ${comment}
+     * @param request - 처리 정보가 담긴 DataSet
+	 * @return 처리 결과
+	 * @exception Exception
+	 */
+	DataSet ${id2}(DataSet request) throws Exception;`;
+				arr1[i1] = id2;
+				if(arr1[i1-1] == id2) {
+					return "";
+				} else {
+					i1++;
+					return format;
+				}
+			} else if(type == "Impl") {
+				format = 
+`
+	/**
+     * ${comment}
+     * @param request - 처리 정보가 담긴 DataSet
+     * @return 처리 결과
+     * @exception Exception
+     */
+    @Override
+    public DataSet ${id2}(DataSet request) throws Exception {
+        return null;
+    }`;
+			arr2[i2] = id2;
+				if(arr2[i2-1] == id2) {
+					return "";
+				} else {
+					i2++;
+					return format;
+				}
+			} else if(type == "Mapper") {
+
+
+if(jong == "select") {
+				format = 
+`
+	/**
+	 * ${comment}
+	 * @param request - 조회할 정보가 담긴 DataSet
+	 * @return 조회 결과
+	 * @exception Exception
+	 */
+	 List<DataSet> ${id}( DataSet request );`;
+
+
+	} else if(jong == "insert") {
+				format = 
+`
+	/**
+	 * ${comment}
+	 * @param request - 등록할 정보가 담긴 DataSet
+	 * @return 등록 결과
+	 * @exception Exception
+	 */
+	 int ${id}( DataSet request );`;
+	} else if(jong == "delete") {
+				format = 
+`
+	/**
+	 * ${comment}
+	 * @param request - 삭제할 정보가 담긴 DataSet
+	 * @return 삭제 결과
+	 * @exception Exception
+	 */
+	 int ${id}( DataSet request );`;
+	} else if(jong == "update") {
+				format = 
+`
+	/**
+	 * ${comment}
+	 * @param request - 수정할 정보가 담긴 DataSet
+	 * @return 수정 결과
+	 * @exception Exception
+	 */
+	 int ${id}( DataSet request );`;
+	}
+
+	
+			return format;
+		};
+	} 
+		return content;
+		
+	};
+
+
+	function createStr2(type, content) {
+		var format = "";	
+		content = content.replace(/(?:\={0,7})([\s\S]*?)(?:\#\#\#\s\([0-9]+\)\s)(\w+)/gim, matched2);
+		function matched2(match, jusuk, id) {
+			if(type == "java") {
+				jusuk = jusuk.replace(/\/\*/gim, "    *");
+				jusuk = jusuk.replace(/\*\//gim, "");
+				format = 
+`	${jusuk}
+	/**
+	 * 함수설명
+	 * @param request - 처리 정보가 담긴 DataSet
+	 * @return 처리 결과
+	 * @exception Exception
+	 */
+	DataSet ${id}(DataSet request) throws Exception;`;
+			
+			} else if(type == "Impl") {
+				format = 
+`	${jusuk}
+	/**
+     * 함수설명
+     * @param request - 처리 정보가 담긴 DataSet
+     * @return 처리 결과
+     * @exception Exception
+     */
+    @Override
+    public DataSet ${id}(DataSet request) throws Exception {
+        return null;
+    }`;
+			
+			} 
+			return format;
+		} 
+
+		return content;
+		
+	};
+
+	function createStr3(type, content) {
+		var format = "";	
+		content = content.replace(/(\/\*\*[\s\S]*?\*\/\s+)DataSet\s(\w+)/gim, matched3);
+		function matched3(match, jusuk, id) {
+			 if(type == "Impl") {
+				format = 
+`    ${jusuk}@Override
+    public DataSet ${id}(DataSet request) throws Exception {
+        return null;
+    }
+	`;
+			} 
+			return format;
+		} 
+
+		return content;
+		
+	};
+
+	function createJAVA(type, fnameDae, content) {
+		var created = "";
+		if(type==1) {
+			created = createStr("java", content);
+		} else {
+			created = createStr2("java", content);
+		}
+		
+		let format = 
+`package ${packageName};
+
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import jscom.util.DataSet;
+
+/**
+ * @Class Name : ${fnameDae}.java
+ * @Description : ${fnameDae} Class
+ * @Modification Information
+ * @
+ * @  수정일      수정자              수정내용
+ * @ ---------   ---------   -------------------------------
+ * @ 2023.03.14           최초생성
+ *
+ * @author  개발팀
+ * @since 2023.03.14
+ * @version 1.0
+ * @see
+ *
+ *  Copyright (C) by MOPAS All right reserved.
+ */
+
+public interface ${fnameDae} {
+
+${created}
+
+}`;
+		return format;
+	};
+
+	function createImpl(type, fname, fnameDae, content) {
+		var created = "";
+		if(type==1) {
+			created = createStr("Impl", content);
+		} else if(type==2) {
+			created = createStr2("Impl", content);
+		} else {
+			created = createStr3("Impl", content);
+		}
+		let format = 
+`package ${packageName}.impl;
+
+import java.math.BigDecimal;
+import java.util.Calendar;
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.stereotype.Service;
+
+import egovframework.rte.fdl.cmmn.EgovAbstractServiceImpl;
+import ${packageName}.${fnameDae};
+import jscom.util.DataSet;
+
+/**
+ * @Class Name : ${fnameDae}Impl.java
+ * @Description : ${fnameDae}Impl Class
+ * @Modification Information
+ * @
+ * @  수정일      수정자              수정내용
+ * @ ---------   ---------   -------------------------------
+ * @ 2023.03.14           최초생성
+ *
+ * @author  개발팀
+ * @since 2023.03.14
+ * @version 1.0
+ * @see
+ *
+ *  Copyright (C) by MOPAS All right reserved.
+ */
+
+@Service("${fname}")
+public class ${fnameDae}Impl extends EgovAbstractServiceImpl implements ${fnameDae} {
+	private static final Logger log = LogManager.getLogger(${fnameDae}.class);
+
+    /** DAO */
+    @Resource(name="${fname}Mapper")
+    private ${fnameDae}Mapper ${fname}Mapper;
+
+${created}
+}`;
+		return format;
+	};
+
+	function createMapper(type,fname, fnameDae, content) {
+		var created = "";
+		if(type==1) {
+			created = createStr("Mapper", content);
+		} else {
+			created = createStr2("Mapper", content);
+		}
+		let format = 
+`package ${packageName}.impl;
+
+import java.util.List;
+
+import egovframework.rte.psl.dataaccess.mapper.Mapper;
+import jscom.util.DataSet;
+
+/**
+ * ${fname}에 관한 데이터처리 매퍼 클래스
+ *
+ * @author   개발팀
+ * @since 2023.03.14
+ * @version 1.0
+ * @see <pre>
+ *  == 개정이력(Modification Information) ==
+ *
+ *          수정일          수정자           수정내용
+ *  ----------------    ------------    ---------------------------
+ *   2023.03.14         개발팀          최초 생성
+ *
+ * </pre>
+ */
+
+@Mapper("${fname}Mapper")
+public interface ${fnameDae}Mapper {
+
+	${created}
+
+}`;
+		return format;
+	};
+
+	function createNewXml( fnameDae, content) {
+		content = content.replace(/resultType=\"h?map\"/gim, "resultType=\"jscom.util.DataSet\"" );
+		content = content.replace(/\<mapper namespace\=\".+\>/gim, converted);
+
+		function converted (match) {
+			match = `<mapper namespace="${packageName}.impl.${fnameDae}Mapper">`;
+			return match;
+		};
+		return content;
+	};
+
+	/*==================================
+	  Impl 파일 만들기
+	==================================*/
+	function convertImplFiles(file, i) {
+		var reader = new FileReader();
+		reader.fileName = file.name;
+		reader.onload = function (e) {
+			var fname = /\w+/g.exec(e.target.fileName)[0];
+
+			packageName = /(package\s+)([^;]+)/gi.exec(reader.result)[2];
+
+			let fnameSo = fname.charAt(0).toLowerCase() + fname.slice(1);
+			let fnameDae = fname.charAt(0).toUpperCase() + fname.slice(1);
+
+			let result = reader.result.replace(/[\s\S]+public\s+interface\s+\w+\s+\{([\s\S]+)\}/gim, '$1');
+			let content = result.match(/(\/\*\*[\s\S]*?\*\/\s+)DataSet\s(\w+)/gim).join("\n");
+			var url =  saveAsXml(2,  fnameDae+"Impl.java", createImpl(3, fnameSo, fnameDae, content));
+			
+			$("#tr_" + i + " #proc").html("변환 성공").css({color:'var(--blue)'});
+			$("#tr_" + i + " #down").html("<a class='btn_small blue' download="+ fnameDae+"Impl.java" +" href="+  url +">저장</a>");
+			$("#ipSuccess").val(Number($("#ipSuccess").val())+1);
+		};
+		reader.readAsText(file, "utf-8");
+	};
+
+	/*==================================
+	  textarea 복사
+	==================================*/
+	function changeJusuk(content) {
+		result = content.replace(/\/\*\*(?:(?!@Class).)*?\*\//gs, match => match.replace(/(\s+)(\*)/gm, '$1 *'));
+	    return result; 
+	};
+
+	/*==================================
+	  주석 별표 맞추기
+	==================================*/
+	function changeJusukFile(file, i) {
+		var reader = new FileReader();
+		reader.fileName = file.name;
+		reader.onload = function (e) {
+			var url =  saveAsXml(2,  e.target.fileName, changeJusuk(reader.result));
+			
+			$("#tr_" + i + " #proc").html("변환 성공").css({color:'var(--blue)'});
+			$("#tr_" + i + " #down").html("<a class='btn_small blue' download="+ e.target.fileName +" href="+  url +">저장</a>");
+			$("#ipSuccess").val(Number($("#ipSuccess").val())+1);
+		};
+		reader.readAsText(file, "utf-8");
+	};
+
+
+
+	/*==================================
+	  텍스트박스에 입력하면 단어추출
+	==================================*/
+	function getWord(txt) {
+		txt = txt.replace(/(\w+)(\.)(\w+)(.+)/gim, '$1.get("$3")');
+		txt = txt.replace(/(\w+)(\-\>)(\w+)(.+)/gim, '$1.get("$3")');
+        //txt = txt.replace(/(.+["])(\w+)(.+)/gim, '$2');
+		txt = txt.replace(/[`~!@#$%^&*|+\-=?;:',<>\{\}\[\]\\\/]/gim, '');
+		txt = txt.replace(/[ ]/gm, '');
+		return txt;
+	};
+
+	/*==================================
+	  최대길이문자기준 정렬
+	==================================*/
+	function spacePretty(regex1, regex2, txt) {
+		var arr = txt.match(regex1);
+		txt = txt.replace(regex2, changeSpace00);
+		function changeSpace00 (str, s1, s2, s3, s4) {
+			var sorted = arr.sort((a,b) =>  b.length - a.length);
+			var longestLength = sorted.map(value => value.length)[0];
+			var newstr = s1 + s2 + s3 + ' '.repeat(longestLength-s2.length) + s4;
+			return newstr;
+		}
+		return txt;
+	};
+
+	/*==================================
+	  기호추가
+	==================================*/
+	function plusGiho(giho, txt) {
+        var arr = txt.split("\n");
+		txt = txt.replace(/(^[\S]*)/gim, pGiho);
+		function pGiho (str) {
+			if(str.trim() != "") {
+				return giho + str + giho;
+			} else {
+				return str;
+			}
+			
+		}
+		return txt;
+	};
+
+	/*==================================
+	  문장구분
+	==================================*/
+	function gubunText(txt) {
+		var arr = txt.match(/\w+(?:\-\>|\.)\w+\s*[=,][^);]+/gim);
+		
+		txt = arr.join("\n");
+		console.warn(txt);
+		txt = txt.replace(/(?<s1>\w+(?:\-\>|\.)\w+)\s*[=,]\s*(?<s2>\w+(?:\-\>|\.)\w+)/gim, reText);
+		function reText(a11, s1, s2) {
+			s1 = s1.replace(/(\w+)(?:\-\>|\.)(\w+)/, '$1.put("$2');
+			s2 = s2.replace(/(\w+)(?:\-\>|\.)(\w+)/, '", $1.get("$2"));');
+			text = s1 + s2;
+			return text;
+		};
+		txt = txt.replace(/(\w+)(?:\-\>|\.)(\w+)\s*[=,]\s*(.*)/gim, '$1.put("$2", $3);');
+
+		txt =  spacePretty(/(?<=\").*?(?=\"\,)/gim, /(\")(.*?)(\")(\,)/gim,  txt);
+		//txt =  spacePretty(/(?<=\").*?(?=\"\))/gim, /(\")(.*?)(\")(\))/gim,  txt);
+
+		return txt;
+	};
+
+	function gubunText_put(txt) {
+		txt = txt.replace(/(?!\")(\w+)(?:\-\>|\.)(\w+)(?!\")/gim, '$1.put("$2", "")');
+		return txt;
+	};
+
+	function gubunText_get(txt) {
+		txt = txt.replace(/(?!\")(\w+)(?:\-\>|\.)(\w+)(?!\")/gim, '$1.get("$2")');
+		return txt;
+	};
+
+	function gubunText_getBigDecimal(txt) {
+		txt = txt.replace(/(?!\")(\w+)(?:\-\>|\.)(\w+)(?!\")/gim, '$1.getBigDecimal("$2")');
+		return txt;
+	};
+
+	function spacePretttest(txt) {
+		txt =  spacePretty(/(?<=\").*?(?=\"\,)/gim, /(\")(.*?)(\")(\,)/gim,  txt);
+		txt =  spacePretty(/(?<=\").*?(?=\"\))/gim, /(\")(.*?)(\")(\))/gim,  txt);
+
+		return txt;
+	};
+
+	function customCopy(num) {
+		const $textarea = document.createElement("textarea");
+		document.body.appendChild($textarea);
+		var text;
+		switch(num) {
+			case 1 : 
+			text = 
+			`if (ObjRet.getInt("Code") < 1) {
+				return ObjRet;
+			}`;
+			break;
+
+			case 2 : 
+			text = 
+			`//----------------------------------------------------------------------`;
+			break;
+
+			case 3 : 
+			text = 
+			`getBigDecimal`;
+			break;
+
+			case 4 : 
+			text = 
+			`getString`;
+			break;
+
+			case 5 : 
+			text = 
+			`BigDecimal.TEN`;
+			break;
+
+			case 6 : 
+			text = 
+			`BigDecimal.ZERO`;
+			break;
+
+		}
+
+		$textarea.value = text;
+  		$textarea.select();
+		document.execCommand('copy');
+  		document.body.removeChild($textarea);
+	};
+
+
+	function changeJusukNEW(txt) {
+		txt = txt.replace(/\s*\/\*/gim, '\n//');
+		txt = txt.replace(/\*\//gim, '');
+		return txt;
+	};
+
+	function makeDataSet(txt) {
+		var content;
+		content = 
+		`DataSet ${txt}_in = new DataSet();
+		${txt}_in.put("", );
+		${txt}_in.put("", );
+		${txt}_in.put("", );
+
+		ObjRet = ${txt}(${txt}_in);
+
+		`
+		return content;
+	};
+
+
+
+
+
+</script>
+</body>
+</html>
