@@ -1,8 +1,8 @@
 # work-converter
-Creating tools to help with converter work
+컨버터 작업용 툴
 - C to JAVA ( .ec to .java)
 - vbp to jsp
-- vbp to websquare.xml
+- vbp to .xml (websquare)
 
 ### JAVA_TOOL_impl.html
 ![image](https://github.com/user-attachments/assets/fcecadf9-28cb-4c0d-90b6-7730cbe1f6b2)
