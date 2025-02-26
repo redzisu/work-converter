@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-	 <!-- 폰트 -->
-	 <link rel="preconnect" href="https://fonts.googleapis.com">
-	 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	 <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding:wght@400;700&display=swap" rel="stylesheet">
+    <!-- 폰트 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding:wght@400;700&display=swap" rel="stylesheet">
     <title>TOOL</title>
     <style>
         :root {
@@ -32,13 +32,15 @@
             --button-info-hover: #dbeffe;
             --input-bg: #ffffff;
             --input-border: #ced4da;
+            --tab-active-bg: #ebeffe;
+            --tab-active-border: #3b4df5;
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-			  font-family: "Nanum Gothic Coding", monospace; font-style: normal; line-height: 1.5;
+            font-family: "Nanum Gothic Coding", monospace; font-style: normal; line-height: 1.5;
         }
         html {
             font-size: 16px;
@@ -54,21 +56,48 @@
         header {
             background-color: var(--header-footer-bg);
             color: white;
-            text-align: center;
             padding: 1rem;
             font-weight: bold;
             font-size: 1.25rem;
             position: sticky;
             top: 0;
             z-index: 100;
-        }
-        .main-content {
-            min-height: calc(100vh - 60px); /* 헤더 높이 + 패딩을 대략 60px로 계산 */
             display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .tabs {
+            display: flex;
+            gap: 1rem;
+        }
+        .tab {
+            padding: 0.5rem 1.5rem;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+			   font-size: 1rem;
+        }
+        .tab.active {
+            background-color: rgba(255, 255, 255, 0.3);
+            font-weight: bold;
+        }
+        .tab:hover {
+            background-color: rgba(255, 255, 255, 0.2);
         }
         .container {
             display: flex;
             flex: 1;
+        }
+        .tab-section {
+            display: none;
+            flex-direction: column;
+            width: 100%;
+			   min-height: calc(100vh - 70px);
+        }
+        .tab-section.active {
+            display: flex;
         }
         nav {
             width: 30%;
@@ -80,7 +109,6 @@
             gap: 1rem;
             border-right: 1px solid var(--border-color);
             flex-shrink: 0;
-            height: 100%;
         }
         .nav-section {
             display: flex;
@@ -201,7 +229,6 @@
             flex-direction: row;
             gap: 0.625rem;
             padding: 1.25rem;
-            height: 100%;
         }
         textarea {
             flex: 1;
@@ -268,60 +295,126 @@
             border-style: solid;
             border-color: rgba(0, 0, 0, 0.8) transparent transparent transparent;
         }
+
+        /* 새로운 탭 콘텐츠 스타일 */
+        .form-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            padding: 2rem;
+            background-color: var(--nav-bg-color);
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-weight: bold;
+        }
+
     </style>
 </head>
 <body>
-    <header>TOOL</header>
+    <header>
+        <div class="tabs">
+            <div class="tab active" data-tab="tab1">텍스트 도구</div>
+            <div class="tab" data-tab="tab2">양식</div>
+        </div>
+        <div class="title">@redzisu</div>
+    </header>
     <div class="main-content">
-        <div class="container">
-            <nav>
-                <div class="nav-section">
-                    <div class="nav-title">버튼 크기 예제</div>
-                    <div class="nav-row">
-                        <button class="btn-xs btn-primary">XS</button>
-                        <button class="btn-sm btn-primary">SM</button>
-                        <button class="btn-md btn-primary">MD</button>
-                        <button class="btn-lg btn-primary">LG</button>
-                        <button class="btn-xl btn-primary">XL</button>
+        <!-- 탭 1 섹션 -->
+        <div class="tab-section active" id="tab1">
+            <div class="container">
+                <nav>
+                    <div class="nav-section">
+                        <div class="nav-title">버튼 크기 예제</div>
+                        <div class="nav-row">
+                            <button class="btn-xs btn-primary">XS</button>
+                            <button class="btn-sm btn-primary">SM</button>
+                            <button class="btn-md btn-primary">MD</button>
+                            <button class="btn-lg btn-primary">LG</button>
+                            <button class="btn-xl btn-primary">XL</button>
+                        </div>
                     </div>
-                </div>
-                <div class="nav-section">
-                    <div class="nav-title">버튼 색상 예제</div>
-                    <div class="nav-row">
-                        <button class="btn-md btn-primary">Primary</button>
-                        <button class="btn-md btn-danger">Danger</button>
-                        <button class="btn-md btn-success">Success</button>
-                        <button class="btn-md btn-warning">Warning</button>
-                        <button class="btn-md btn-info">Info</button>
+                    <div class="nav-section">
+                        <div class="nav-title">버튼 색상 예제</div>
+                        <div class="nav-row">
+                            <button class="btn-md btn-primary">Primary</button>
+                            <button class="btn-md btn-danger">Danger</button>
+                            <button class="btn-md btn-success">Success</button>
+                            <button class="btn-md btn-warning">Warning</button>
+                            <button class="btn-md btn-info">Info</button>
+                        </div>
                     </div>
+                </nav>
+                <div class="content">
+                    <textarea placeholder="첫 번째 텍스트 영역"></textarea>
+                    <textarea placeholder="두 번째 텍스트 영역"></textarea>
                 </div>
-            </nav>
-            <div class="content">
-                <textarea placeholder="첫 번째 텍스트 영역"></textarea>
-                <textarea placeholder="두 번째 텍스트 영역"></textarea>
             </div>
+            <footer>
+                <div class="footer-title">&#11015; 클릭하여 텍스트 복사하기</div>
+                <div class="footer-buttons">
+                    <button class="btn-sm btn-primary copy-btn" data-text="안녕하세요">안녕하세요</button>
+                    <button class="btn-sm btn-success copy-btn" data-text="감사합니다">감사합니다</button>
+                    <button class="btn-sm btn-warning copy-btn" data-text="좋은 하루 되세요">좋은 하루 되세요</button>
+                    <button class="btn-sm btn-info copy-btn" data-text="문의사항이 있으시면 언제든지 연락주세요">문의사항이 있으시면 언제든지 연락주세요</button>
+                    <button class="btn-sm btn-danger copy-btn" data-text="곧 연락드리겠습니다">곧 연락드리겠습니다</button>
+                </div>
+            </footer>
         </div>
+
+        <!-- 탭 2 섹션 -->
+        <div class="tab-section" id="tab2">
+            <div class="container">
+                <div class="content">
+                    <div class="form-container">
+                        <h2>문의 양식</h2>
+                        <div class="form-group">
+                            <label for="name">이름</label>
+                            <input type="text" id="name" placeholder="이름을 입력하세요">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">이메일</label>
+                            <input type="email" id="email" placeholder="이메일을 입력하세요">
+                        </div>
+                        <div class="form-group">
+                            <label for="subject">제목</label>
+                            <input type="text" id="subject" placeholder="제목을 입력하세요">
+                        </div>
+                        <div class="form-group">
+                            <label for="message">메시지</label>
+                            <textarea id="message" placeholder="메시지를 입력하세요" rows="5"></textarea>
+                        </div>
+                        <div class="nav-row">
+                            <button class="btn-md btn-primary">제출하기</button>
+                            <button class="btn-md btn-danger">취소하기</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <footer>
+                <div class="footer-title">&#11015; 양식 - 자주 사용하는 응답</div>
+                <div class="footer-buttons">
+                    <button class="btn-sm btn-primary copy-btn" data-text="문서를 검토해주셔서 감사합니다">문서를 검토해주셔서 감사합니다</button>
+                    <button class="btn-sm btn-success copy-btn" data-text="변경사항이 저장되었습니다">변경사항이 저장되었습니다</button>
+                    <button class="btn-sm btn-warning copy-btn" data-text="추가 정보가 필요합니다">추가 정보가 필요합니다</button>
+                    <button class="btn-sm btn-info copy-btn" data-text="검토 후 연락드리겠습니다">검토 후 연락드리겠습니다</button>
+                    <button class="btn-sm btn-danger copy-btn" data-text="오류가 발생했습니다">오류가 발생했습니다</button>
+                </div>
+            </footer>
+        </div>
+
     </div>
-    <footer>
-        <div class="footer-title">&#11015; 클릭하여 텍스트 복사하기</div>
-        <div class="footer-buttons">
-            <button class="btn-sm btn-primary copy-btn" data-text="안녕하세요">안녕하세요</button>
-            <button class="btn-sm btn-success copy-btn" data-text="감사합니다">감사합니다</button>
-            <button class="btn-sm btn-warning copy-btn" data-text="좋은 하루 되세요">좋은 하루 되세요</button>
-            <button class="btn-sm btn-info copy-btn" data-text="문의사항이 있으시면 언제든지 연락주세요">문의사항이 있으시면 언제든지 연락주세요</button>
-            <button class="btn-sm btn-danger copy-btn" data-text="곧 연락드리겠습니다">곧 연락드리겠습니다</button>
-            <button class="btn-sm btn-primary copy-btn" data-text="환영합니다">환영합니다</button>
-            <button class="btn-sm btn-success copy-btn" data-text="문제가 해결되었습니다">문제가 해결되었습니다</button>
-            <button class="btn-sm btn-warning copy-btn" data-text="주문이 완료되었습니다">주문이 완료되었습니다</button>
-            <button class="btn-sm btn-info copy-btn" data-text="배송이 시작되었습니다">배송이 시작되었습니다</button>
-            <button class="btn-sm btn-danger copy-btn" data-text="취소 요청이 접수되었습니다">취소 요청이 접수되었습니다</button>
-            <button class="btn-sm btn-primary copy-btn" data-text="문서를 검토해주셔서 감사합니다">문서를 검토해주셔서 감사합니다</button>
-            <button class="btn-sm btn-success copy-btn" data-text="변경사항이 저장되었습니다">변경사항이 저장되었습니다</button>
-            <button class="btn-sm btn-warning copy-btn" data-text="추가 정보가 필요합니다">추가 정보가 필요합니다</button>
-            <button class="btn-sm btn-info copy-btn" data-text="다음 단계로 진행하겠습니다">다음 단계로 진행하겠습니다</button>
-            <button class="btn-sm btn-danger copy-btn" data-text="오류가 발생했습니다">오류가 발생했습니다</button>
-        </div>
-    </footer>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -380,6 +473,134 @@
                 setTimeout(() => {
                     tooltip.style.opacity = 0;
                 }, 1500);
+            }
+
+            // 탭 전환 기능
+            const tabs = document.querySelectorAll('.tab');
+            const tabSections = document.querySelectorAll('.tab-section');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // 현재 활성화된 탭 비활성화
+                    document.querySelector('.tab.active').classList.remove('active');
+                    document.querySelector('.tab-section.active').classList.remove('active');
+                    
+                    // 클릭된 탭 활성화
+                    this.classList.add('active');
+                    const tabId = this.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+
+            // 계산기 기능
+            const display = document.getElementById('display');
+            const buttons = document.querySelectorAll('.calculator-button');
+            let currentValue = '0';
+            let previousValue = null;
+            let operation = null;
+            let resetDisplay = false;
+            
+            buttons.forEach(button => {
+                button.addEventListener('click', function() {
+                    if (this.hasAttribute('data-number')) {
+                        const number = this.getAttribute('data-number');
+                        if (currentValue === '0' || resetDisplay) {
+                            currentValue = number;
+                            resetDisplay = false;
+                        } else {
+                            currentValue += number;
+                        }
+                        updateDisplay();
+                    } else if (this.hasAttribute('data-action')) {
+                        const action = this.getAttribute('data-action');
+                        switch (action) {
+                            case 'clear':
+                                currentValue = '0';
+                                previousValue = null;
+                                operation = null;
+                                updateDisplay();
+                                break;
+                            case 'backspace':
+                                if (currentValue.length > 1) {
+                                    currentValue = currentValue.slice(0, -1);
+                                } else {
+                                    currentValue = '0';
+                                }
+                                updateDisplay();
+                                break;
+                            case 'decimal':
+                                if (!currentValue.includes('.')) {
+                                    currentValue += '.';
+                                    updateDisplay();
+                                }
+                                break;
+                            case 'calculate':
+                                if (previousValue !== null && operation !== null) {
+                                    calculateResult();
+                                    previousValue = null;
+                                    operation = null;
+                                }
+                                break;
+                            case 'add':
+                            case 'subtract':
+                            case 'multiply':
+                            case 'divide':
+                            case 'percentage':
+                                if (previousValue !== null && operation !== null) {
+                                    calculateResult();
+                                }
+                                previousValue = parseFloat(currentValue);
+                                operation = action;
+                                resetDisplay = true;
+                                break;
+                        }
+                    }
+                });
+            });
+
+            function updateDisplay() {
+                display.textContent = currentValue;
+            }
+
+            function calculateResult() {
+                const current = parseFloat(currentValue);
+                let result;
+                
+                switch (operation) {
+                    case 'add':
+                        result = previousValue + current;
+                        break;
+                    case 'subtract':
+                        result = previousValue - current;
+                        break;
+                    case 'multiply':
+                        result = previousValue * current;
+                        break;
+                    case 'divide':
+                        if (current === 0) {
+                            result = '오류';
+                        } else {
+                            result = previousValue / current;
+                        }
+                        break;
+                    case 'percentage':
+                        result = (previousValue * current) / 100;
+                        break;
+                }
+                
+                if (result === '오류') {
+                    currentValue = result;
+                } else {
+                    // 소수점 처리
+                    currentValue = parseFloat(result.toFixed(8)).toString();
+                    // 불필요한 0 제거
+                    if (currentValue.includes('.')) {
+                        currentValue = currentValue.replace(/\.?0+$/, '');
+                    }
+                }
+                
+                updateDisplay();
+                resetDisplay = true;
             }
         });
     </script>
